@@ -1,0 +1,1577 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Board</title>
+<style>
+	:root {
+		--wall: #191d24;
+		--wall-deep: #12151b;
+		--wall-line: rgba(255, 255, 255, .055);
+		--paper: #e9e3d5;
+		--paper-shade: #d6cdb9;
+		--ink: #221f1a;
+		--ink-soft: #5d564a;
+		--thread: #a3232b;
+		--thread-hot: #e2564a;
+		--brass: #c9a227;
+		--sage: #6f8f7a;
+		--violet: #8a7099;
+		--panel: #20252e;
+		--panel-line: rgba(233, 227, 213, .14);
+		--panel-text: #ddd7c9;
+		--panel-dim: #8e8879;
+		--serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+		--sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+	}
+
+	* {
+		box-sizing: border-box
+	}
+
+	html,
+	body {
+		height: 100%
+	}
+
+	body {
+		margin: 0;
+		overflow: hidden;
+		background: var(--wall);
+		color: var(--panel-text);
+		font-family: var(--sans);
+		font-size: 14px;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	#board {
+		position: fixed;
+		inset: 0;
+		background:
+			radial-gradient(120% 90% at 50% 0%, #232935 0%, var(--wall) 45%, var(--wall-deep) 100%);
+		cursor: grab;
+		touch-action: none;
+	}
+
+	#board.panning {
+		cursor: grabbing
+	}
+
+	#grain {
+		position: fixed;
+		inset: 0;
+		pointer-events: none;
+		opacity: .5;
+		background-image:
+			linear-gradient(var(--wall-line) 1px, transparent 1px),
+			linear-gradient(90deg, var(--wall-line) 1px, transparent 1px);
+		background-size: 46px 46px;
+	}
+
+	svg#links {
+		position: fixed;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none
+	}
+
+	svg#links .hit {
+		stroke: transparent;
+		stroke-width: 16;
+		fill: none;
+		pointer-events: stroke;
+		cursor: pointer
+	}
+
+	svg#links .line {
+		fill: none;
+		stroke-linecap: round;
+		pointer-events: none;
+		transition: opacity .18s ease
+	}
+
+	svg#links g.thread.faded {
+		opacity: .14
+	}
+
+	svg#links g.thread.hot .line {
+		filter: drop-shadow(0 0 6px rgba(226, 86, 74, .55))
+	}
+
+	svg#links .hub {
+		cursor: pointer;
+		pointer-events: auto
+	}
+
+	svg#links text.tlabel {
+		font-family: var(--sans);
+		font-size: 11.5px;
+		fill: var(--paper);
+		paint-order: stroke;
+		stroke: #11141a;
+		stroke-width: 4px;
+		stroke-linejoin: round;
+		pointer-events: none;
+		letter-spacing: .15px;
+	}
+
+	svg#links .hit:focus-visible {
+		outline: none
+	}
+
+	svg#links .hit:focus-visible+.line {
+		stroke: var(--brass)
+	}
+
+	#cards {
+		position: fixed;
+		top: 0;
+		left: 0;
+		transform-origin: 0 0;
+		pointer-events: none
+	}
+
+	.card {
+		position: absolute;
+		pointer-events: auto;
+		width: 184px;
+		transform: translate(-50%, -50%);
+		background: linear-gradient(178deg, var(--paper), var(--paper-shade));
+		color: var(--ink);
+		border: 0;
+		padding: 0;
+		text-align: left;
+		font: inherit;
+		border-radius: 2px;
+		cursor: grab;
+		box-shadow: 0 14px 26px -12px rgba(0, 0, 0, .75), 0 2px 0 rgba(0, 0, 0, .25);
+		transition: opacity .18s ease, box-shadow .18s ease;
+	}
+
+	.card:active {
+		cursor: grabbing
+	}
+
+	.card::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 4px;
+		background: var(--kind, #9a8f79);
+	}
+
+	.card::after {
+		content: '';
+		position: absolute;
+		top: -7px;
+		left: 50%;
+		width: 11px;
+		height: 11px;
+		margin-left: -5.5px;
+		border-radius: 50%;
+		background: radial-gradient(circle at 35% 30%, #f6f0e2, #8e836b 60%, #3c352a);
+		box-shadow: 0 2px 3px rgba(0, 0, 0, .6);
+	}
+
+	.card.faded {
+		opacity: .22
+	}
+
+	.card.sel {
+		box-shadow: 0 0 0 2px var(--brass), 0 18px 34px -12px rgba(0, 0, 0, .85)
+	}
+
+	.card:focus-visible {
+		outline: 2px solid var(--brass);
+		outline-offset: 3px
+	}
+
+	.card .thumb {
+		display: block;
+		width: 100%;
+		height: 96px;
+		object-fit: cover;
+		border-bottom: 1px solid rgba(0, 0, 0, .18)
+	}
+
+	.card .body {
+		padding: 12px 12px 11px 14px
+	}
+
+	.card .kind {
+		font-size: 10.5px;
+		color: var(--ink-soft);
+		letter-spacing: .4px;
+		margin-bottom: 3px
+	}
+
+	.card .name {
+		font-family: var(--serif);
+		font-size: 17px;
+		line-height: 1.22;
+		font-weight: 600;
+		letter-spacing: .1px
+	}
+
+	.card .snip {
+		margin-top: 6px;
+		font-size: 12px;
+		line-height: 1.4;
+		color: var(--ink-soft);
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden
+	}
+
+	/* chrome */
+	.bar {
+		position: fixed;
+		top: 14px;
+		left: 14px;
+		display: flex;
+		gap: 6px;
+		align-items: center;
+		flex-wrap: wrap;
+		background: rgba(18, 21, 27, .86);
+		backdrop-filter: blur(9px);
+		border: 1px solid var(--panel-line);
+		border-radius: 3px;
+		padding: 7px 8px;
+		max-width: calc(100vw - 28px);
+	}
+
+	.mark {
+		font-family: var(--serif);
+		font-size: 15px;
+		color: var(--paper);
+		padding: 0 9px 0 4px;
+		letter-spacing: .3px
+	}
+
+	button {
+		font: inherit
+	}
+
+	.btn {
+		background: transparent;
+		color: var(--panel-text);
+		border: 1px solid var(--panel-line);
+		border-radius: 2px;
+		padding: 6px 10px;
+		cursor: pointer;
+		transition: background .15s, border-color .15s;
+	}
+
+	.btn:hover {
+		background: rgba(233, 227, 213, .09);
+		border-color: rgba(233, 227, 213, .3)
+	}
+
+	.btn:focus-visible {
+		outline: 2px solid var(--brass);
+		outline-offset: 2px
+	}
+
+	.btn.on {
+		background: var(--thread);
+		border-color: var(--thread);
+		color: #fff
+	}
+
+	.btn.ghost {
+		border-color: transparent;
+		color: var(--panel-dim);
+		padding: 6px 8px
+	}
+
+	.btn.ghost:hover {
+		color: var(--panel-text)
+	}
+
+	.btn.danger {
+		color: #e08079;
+		border-color: rgba(224, 128, 121, .4)
+	}
+
+	.btn.danger:hover {
+		background: rgba(224, 128, 121, .14)
+	}
+
+	.btn.primary {
+		background: var(--paper);
+		color: var(--ink);
+		border-color: var(--paper);
+		font-weight: 600
+	}
+
+	.btn.primary:hover {
+		background: #fff
+	}
+
+	.corner {
+		position: fixed;
+		bottom: 14px;
+		left: 14px;
+		display: flex;
+		gap: 6px;
+		align-items: center;
+		background: rgba(18, 21, 27, .86);
+		backdrop-filter: blur(9px);
+		border: 1px solid var(--panel-line);
+		border-radius: 3px;
+		padding: 6px 7px
+	}
+
+	.zoom {
+		position: fixed;
+		bottom: 14px;
+		right: 14px;
+		display: flex;
+		gap: 6px;
+		background: rgba(18, 21, 27, .86);
+		backdrop-filter: blur(9px);
+		border: 1px solid var(--panel-line);
+		border-radius: 3px;
+		padding: 6px 7px;
+		transition: right .28s ease
+	}
+
+	body.open .zoom {
+		right: calc(min(380px, 100vw) + 14px)
+	}
+
+	.who {
+		color: var(--panel-dim);
+		font-size: 12.5px;
+		padding: 0 6px
+	}
+
+	.who b {
+		color: var(--paper);
+		font-weight: 600
+	}
+
+	/* dossier */
+	#panel {
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		width: min(380px, 100vw);
+		background: linear-gradient(180deg, #242a34, var(--panel));
+		border-left: 1px solid var(--panel-line);
+		transform: translateX(101%);
+		transition: transform .28s cubic-bezier(.3, .8, .3, 1);
+		display: flex;
+		flex-direction: column;
+		z-index: 5;
+	}
+
+	body.open #panel {
+		transform: none
+	}
+
+	#panel .head {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 10px;
+		padding: 16px 16px 12px;
+		border-bottom: 1px solid var(--panel-line)
+	}
+
+	#panel .scroll {
+		overflow: auto;
+		padding: 16px;
+		flex: 1
+	}
+
+	.eyebrow {
+		font-size: 11px;
+		color: var(--panel-dim);
+		letter-spacing: .5px;
+		margin-bottom: 4px
+	}
+
+	.title {
+		font-family: var(--serif);
+		font-size: 23px;
+		line-height: 1.2;
+		color: var(--paper);
+		margin: 0
+	}
+
+	.desc {
+		margin: 12px 0 0;
+		line-height: 1.62;
+		color: #c6c0b2;
+		max-width: 62ch
+	}
+
+	.hero {
+		width: 100%;
+		border-radius: 2px;
+		margin-top: 14px;
+		border: 1px solid var(--panel-line)
+	}
+
+	.sec {
+		margin-top: 22px
+	}
+
+	.sec h3 {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--panel-dim);
+		margin: 0 0 9px;
+		letter-spacing: .3px
+	}
+
+	.row {
+		border-top: 1px solid var(--panel-line);
+		padding: 11px 0
+	}
+
+	.row:last-child {
+		border-bottom: 1px solid var(--panel-line)
+	}
+
+	.rowhead {
+		display: flex;
+		align-items: center;
+		gap: 8px
+	}
+
+	.swatch {
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
+		flex: none
+	}
+
+	.link {
+		background: none;
+		border: 0;
+		padding: 0;
+		color: var(--paper);
+		cursor: pointer;
+		font: inherit;
+		text-align: left;
+		border-bottom: 1px solid rgba(233, 227, 213, .3)
+	}
+
+	.link:hover {
+		border-bottom-color: var(--paper)
+	}
+
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		margin-top: 8px
+	}
+
+	.chip {
+		background: rgba(233, 227, 213, .08);
+		border: 1px solid var(--panel-line);
+		color: var(--panel-text);
+		border-radius: 2px;
+		padding: 4px 8px;
+		font-size: 12.5px;
+		cursor: pointer
+	}
+
+	.chip:hover {
+		background: rgba(233, 227, 213, .16)
+	}
+
+	.meta {
+		margin-top: 22px;
+		font-size: 12px;
+		color: var(--panel-dim);
+		line-height: 1.6
+	}
+
+	.acts {
+		display: flex;
+		gap: 8px;
+		margin-top: 22px;
+		flex-wrap: wrap
+	}
+
+	label.f {
+		display: block;
+		margin-top: 14px;
+		font-size: 12px;
+		color: var(--panel-dim)
+	}
+
+	input[type=text],
+	input[type=url],
+	textarea,
+	select {
+		width: 100%;
+		margin-top: 5px;
+		background: rgba(0, 0, 0, .28);
+		color: var(--panel-text);
+		border: 1px solid var(--panel-line);
+		border-radius: 2px;
+		padding: 8px 9px;
+		font: inherit;
+	}
+
+	input:focus,
+	textarea:focus,
+	select:focus {
+		outline: none;
+		border-color: var(--brass)
+	}
+
+	textarea {
+		resize: vertical;
+		min-height: 88px;
+		line-height: 1.5
+	}
+
+	.picker {
+		max-height: 210px;
+		overflow: auto;
+		border: 1px solid var(--panel-line);
+		border-radius: 2px;
+		margin-top: 5px
+	}
+
+	.pick {
+		display: flex;
+		gap: 9px;
+		align-items: center;
+		padding: 8px 10px;
+		cursor: pointer;
+		border-bottom: 1px solid rgba(255, 255, 255, .05)
+	}
+
+	.pick:hover {
+		background: rgba(233, 227, 213, .06)
+	}
+
+	.pick input {
+		margin: 0;
+		accent-color: var(--thread)
+	}
+
+	.swatches {
+		display: flex;
+		gap: 8px;
+		margin-top: 7px
+	}
+
+	.sw {
+		width: 26px;
+		height: 26px;
+		border-radius: 50%;
+		border: 2px solid transparent;
+		cursor: pointer;
+		padding: 0
+	}
+
+	.sw[aria-pressed=true] {
+		border-color: var(--paper)
+	}
+
+	#tip {
+		position: fixed;
+		z-index: 9;
+		pointer-events: none;
+		opacity: 0;
+		max-width: 260px;
+		background: rgba(12, 14, 18, .96);
+		border: 1px solid var(--panel-line);
+		border-radius: 3px;
+		padding: 9px 11px;
+		line-height: 1.5;
+		font-size: 12.5px;
+		color: #cfc9bb;
+		transition: opacity .12s ease;
+		box-shadow: 0 10px 24px -10px #000;
+	}
+
+	#tip.show {
+		opacity: 1
+	}
+
+	#tip strong {
+		display: block;
+		font-family: var(--serif);
+		font-size: 15px;
+		color: var(--paper);
+		font-weight: 600;
+		margin-bottom: 3px
+	}
+
+	.veil {
+		position: fixed;
+		inset: 0;
+		z-index: 20;
+		background: rgba(8, 10, 13, .72);
+		display: none;
+		align-items: center;
+		justify-content: center;
+		padding: 20px
+	}
+
+	.veil.show {
+		display: flex
+	}
+
+	.modal {
+		background: var(--panel);
+		border: 1px solid var(--panel-line);
+		border-radius: 3px;
+		width: min(560px, 100%);
+		max-height: 86vh;
+		overflow: auto;
+		padding: 20px
+	}
+
+	.modal h2 {
+		font-family: var(--serif);
+		font-size: 21px;
+		margin: 0 0 6px;
+		color: var(--paper);
+		font-weight: 600
+	}
+
+	.modal p {
+		color: var(--panel-dim);
+		line-height: 1.6;
+		margin: 0
+	}
+
+	pre {
+		background: rgba(0, 0, 0, .32);
+		border: 1px solid var(--panel-line);
+		border-radius: 2px;
+		padding: 11px;
+		overflow: auto;
+		font-size: 11.5px;
+		line-height: 1.55;
+		color: #a9c3b2;
+		margin: 10px 0 0
+	}
+
+	.note {
+		font-size: 12px;
+		color: var(--panel-dim);
+		margin-top: 7px;
+		line-height: 1.55
+	}
+
+	.err {
+		color: #e08079;
+		font-size: 12.5px;
+		margin-top: 9px;
+		min-height: 1em
+	}
+
+	#empty {
+		position: fixed;
+		inset: 0;
+		display: none;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		pointer-events: none;
+		padding: 24px
+	}
+
+	#empty.show {
+		display: flex
+	}
+
+	#empty div {
+		max-width: 34ch
+	}
+
+	#empty h1 {
+		font-family: var(--serif);
+		font-size: 26px;
+		color: var(--paper);
+		margin: 0 0 8px;
+		font-weight: 600
+	}
+
+	#empty p {
+		color: var(--panel-dim);
+		line-height: 1.6;
+		margin: 0
+	}
+
+	@media (max-width:640px) {
+		#panel {
+			top: auto;
+			height: 74vh;
+			width: 100vw;
+			border-left: 0;
+			border-top: 1px solid var(--panel-line);
+			transform: translateY(101%)
+		}
+
+		body.open #panel {
+			transform: none
+		}
+
+		body.open .zoom {
+			right: 14px;
+			bottom: calc(74vh + 14px)
+		}
+
+		.card {
+			width: 158px
+		}
+	}
+
+	@media (prefers-reduced-motion:reduce) {
+		* {
+			transition: none !important
+		}
+	}
+</style>
+
+<div id="board">
+	<div id="grain"></div>
+	<svg id="links">
+		<g id="lg"></g>
+	</svg>
+	<div id="cards"></div>
+</div>
+
+<div id="empty">
+	<div>
+		<h1>Nothing pinned yet</h1>
+		<p>Start with a card — a person, a place, or an idea. Then run a thread between them.</p>
+	</div>
+</div>
+
+<div class="bar">
+	<span class="mark">The Board</span>
+	<button class="btn" id="addCard">New card</button>
+	<button class="btn" id="addThread">New thread</button>
+	<button class="btn ghost" id="openImport">Import</button>
+	<button class="btn ghost" id="doExport">Export</button>
+	<button class="btn ghost" id="openSound">Sound</button>
+</div>
+
+<div class="corner">
+	<span class="who" id="who"></span>
+	<button class="btn ghost" id="setName">Change</button>
+	<button class="btn ghost" id="refresh" title="Pull in other people's changes">Refresh</button>
+</div>
+
+<div class="zoom">
+	<button class="btn" id="zOut" aria-label="Zoom out">&minus;</button>
+	<button class="btn" id="zFit">Fit</button>
+	<button class="btn" id="zIn" aria-label="Zoom in">+</button>
+</div>
+
+<aside id="panel" aria-live="polite">
+	<div class="head">
+		<div id="pHead"></div>
+		<button class="btn ghost" id="close" aria-label="Close">Close</button>
+	</div>
+	<div class="scroll" id="pBody"></div>
+</aside>
+
+<div id="tip" role="tooltip"></div>
+
+<div class="veil" id="veil">
+	<div class="modal" id="modal"></div>
+</div>
+
+<audio id="audio" loop></audio>
+
+<script>
+	(function () {
+		"use strict";
+
+		/* ---------- storage ---------- */
+		var KEY = 'investigation-board:v1', NAME_KEY = 'board:viewer-name';
+		var mem = {};
+		var store = {
+			get: function (k, shared) {
+				if (window.storage) return window.storage.get(k, !!shared).then(function (r) { return r ? r.value : null; }, function () { return null; });
+				return Promise.resolve(Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : null);
+			},
+			set: function (k, v, shared) {
+				if (window.storage) return window.storage.set(k, v, !!shared);
+				mem[k] = v; return Promise.resolve(true);
+			}
+		};
+
+		/* ---------- state ---------- */
+		var state = { nodes: [], threads: [], audio: { url: '' }, tombs: {} };
+		var view = { x: 0, y: 0, k: 1 };
+		var sel = { type: null, id: null };
+		var hot = null;               // hovered id for highlight
+		var me = null;
+		var alpha = 1, raf = null, dragging = null, saveTimer = null, editing = false;
+
+		var KINDS = { person: { label: 'Person', color: '#c9a227' }, place: { label: 'Place', color: '#6f8f7a' }, concept: { label: 'Idea', color: '#8a7099' } };
+		var COLORS = ['#a3232b', '#c9a227', '#5f92a8', '#8a7099', '#dcd6c8'];
+
+		function uid(p) { return p + '-' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3); }
+		function now() { return Date.now(); }
+		function byId(list, id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
+		function node(id) { return byId(state.nodes, id); }
+		function thread(id) { return byId(state.threads, id); }
+		function esc(s) {
+			return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+			});
+		}
+		function threadsOf(id) { return state.threads.filter(function (t) { return t.nodeIds.indexOf(id) >= 0; }); }
+		function when(ts) {
+			if (!ts) return ''; var d = new Date(ts);
+			return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ', ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+		}
+
+		/* ---------- seed ---------- */
+		function seed() {
+			var t = now() - 864e5, mk = function (title, kind, description) {
+				return {
+					id: uid('n'), title: title, kind: kind, description: description, image: '',
+					x: (Math.random() - .5) * 300, y: (Math.random() - .5) * 220, pinned: false,
+					createdBy: 'The board', updatedBy: 'The board', updatedAt: t
+				};
+			};
+			var vera = mk('Vera Lindqvist', 'person', 'Archivist at the Halloway. Signed out on the night of the third and never signed back in.');
+			var reyes = mk('Amos Reyes', 'person', 'Night security. Says the lobby camera was already dark when he arrived at 21:40.');
+			var hall = mk('The Halloway Building', 'place', 'Nine floors, one working elevator, and a basement that is not on any of the floor plans.');
+			var ledger = mk('Ledger page 41', 'concept', 'Two entries in the same hand, four hours apart, both timestamped 21:15.');
+			var black = mk('The blackout', 'concept', 'Power drops across the block for eleven minutes. Nobody filed a report.');
+			state.nodes = [vera, reyes, hall, ledger, black];
+			state.threads = [
+				{
+					id: uid('t'), label: 'Last seen together', color: '#a3232b',
+					description: 'Three separate sightings put all of them inside the same block within an hour.',
+					nodeIds: [vera.id, reyes.id, hall.id], createdBy: 'The board', updatedBy: 'The board', updatedAt: t
+				},
+				{
+					id: uid('t'), label: 'The eleven minutes', color: '#c9a227',
+					description: 'Everything that goes wrong that night happens inside the same window.',
+					nodeIds: [black.id, ledger.id, hall.id, reyes.id], createdBy: 'The board', updatedBy: 'The board', updatedAt: t
+				},
+				{
+					id: uid('t'), label: 'Handwriting does not match', color: '#5f92a8',
+					description: 'The second entry on page 41 was not written by Vera.',
+					nodeIds: [ledger.id, vera.id], createdBy: 'The board', updatedBy: 'The board', updatedAt: t
+				}
+			];
+		}
+
+		/* ---------- merge + persist ---------- */
+		function mergeLists(a, b, tombs) {
+			var out = {}, i;
+			for (i = 0; i < a.length; i++) out[a[i].id] = a[i];
+			for (i = 0; i < b.length; i++) {
+				var x = b[i], cur = out[x.id];
+				if (!cur || (x.updatedAt || 0) >= (cur.updatedAt || 0)) out[x.id] = x;
+			}
+			return Object.keys(out).map(function (k) { return out[k]; })
+				.filter(function (x) { return !(tombs[x.id] && tombs[x.id] > (x.updatedAt || 0)); });
+		}
+		function merge(remote, local) {
+			if (!remote) return local;
+			var tombs = {}, k;
+			for (k in remote.tombs || {}) tombs[k] = remote.tombs[k];
+			for (k in local.tombs || {}) tombs[k] = Math.max(tombs[k] || 0, local.tombs[k]);
+			var nodes = mergeLists(remote.nodes || [], local.nodes || [], tombs);
+			var ids = {}; nodes.forEach(function (n) { ids[n.id] = 1; });
+			var threads = mergeLists(remote.threads || [], local.threads || [], tombs).map(function (t) {
+				t.nodeIds = (t.nodeIds || []).filter(function (id) { return ids[id]; }); return t;
+			});
+			var audio = ((local.audio && local.audio.at) || 0) >= ((remote.audio && remote.audio.at) || 0) ? local.audio : remote.audio;
+			return { nodes: nodes, threads: threads, audio: audio || { url: '' }, tombs: tombs };
+		}
+		function save() {
+			clearTimeout(saveTimer);
+			saveTimer = setTimeout(function () {
+				store.get(KEY, true).then(function (raw) {
+					var remote = null; try { remote = raw ? JSON.parse(raw) : null; } catch (e) { }
+					state = merge(remote, state);
+					return store.set(KEY, JSON.stringify(state), true);
+				}).then(function () { render(); }).catch(function () { });
+			}, 500);
+		}
+		function pull() {
+			return store.get(KEY, true).then(function (raw) {
+				if (!raw) return;
+				var remote = null; try { remote = JSON.parse(raw); } catch (e) { return; }
+				state = merge(remote, state);
+				if (sel.id && !node(sel.id) && !thread(sel.id)) deselect();
+				bump(.35); render();
+			}).catch(function () { });
+		}
+
+		/* ---------- geometry ---------- */
+		function centroid(list) { var x = 0, y = 0; list.forEach(function (n) { x += n.x; y += n.y; }); return { x: x / list.length, y: y / list.length }; }
+		function members(t) { return t.nodeIds.map(node).filter(Boolean); }
+		function hubOf(t) { var m = members(t); return m.length ? centroid(m) : { x: 0, y: 0 }; }
+		function sagPath(a, b) {
+			var dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy);
+			var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2 + Math.min(34, d * 0.11) + 6;
+			return 'M' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) + ' Q' + mx.toFixed(1) + ' ' + my.toFixed(1) + ' ' + b.x.toFixed(1) + ' ' + b.y.toFixed(1);
+		}
+
+		/* ---------- force layout ---------- */
+		function bump(v) { alpha = Math.max(alpha, v || .7); if (!raf) raf = requestAnimationFrame(loop); }
+		function step() {
+			var ns = state.nodes, i, j, a, b;
+			for (i = 0; i < ns.length; i++)for (j = i + 1; j < ns.length; j++) {
+				a = ns[i]; b = ns[j];
+				var dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || .01;
+				if (d < 250) {
+					var f = (250 - d) / d * .45 * alpha; dx *= f; dy *= f;
+					if (!a.fixed && !a.pinned) { a.x -= dx; a.y -= dy; }
+					if (!b.fixed && !b.pinned) { b.x += dx; b.y += dy; }
+				}
+			}
+			state.threads.forEach(function (t) {
+				var m = members(t); if (m.length < 2) return;
+				var c = centroid(m), target = m.length === 2 ? 95 : 150;
+				m.forEach(function (n) {
+					if (n.fixed || n.pinned) return;
+					var dx = c.x - n.x, dy = c.y - n.y, d = Math.sqrt(dx * dx + dy * dy) || .01;
+					var f = (d - target) / d * .09 * alpha;
+					n.x += dx * f; n.y += dy * f;
+				});
+			});
+			ns.forEach(function (n) { if (n.fixed || n.pinned) return; n.x -= n.x * .0016 * alpha; n.y -= n.y * .0016 * alpha; });
+			alpha *= .976;
+		}
+		function loop() {
+			if (!dragging) step();
+			paint();
+			if (alpha > .006 || dragging) raf = requestAnimationFrame(loop);
+			else { raf = null; save(); }
+		}
+
+		/* ---------- render ---------- */
+		var lg = document.getElementById('lg'), cards = document.getElementById('cards');
+		var els = { cards: {}, threads: {} };
+
+		function relatedNodeIds() {
+			if (sel.type === 'node') {
+				var s = {}; s[sel.id] = 1;
+				threadsOf(sel.id).forEach(function (t) { t.nodeIds.forEach(function (i) { s[i] = 1; }); });
+				return s;
+			}
+			if (sel.type === 'thread') { var t = thread(sel.id), s2 = {}; if (t) t.nodeIds.forEach(function (i) { s2[i] = 1; }); return s2; }
+			return null;
+		}
+		function relatedThreadIds() {
+			if (sel.type === 'node') { var s = {}; threadsOf(sel.id).forEach(function (t) { s[t.id] = 1; }); return s; }
+			if (sel.type === 'thread') { var s2 = {}; s2[sel.id] = 1; return s2; }
+			return null;
+		}
+
+		function render() {
+			lg.textContent = ''; cards.textContent = ''; els = { cards: {}, threads: {} };
+			var NS = 'http://www.w3.org/2000/svg';
+			var rn = relatedNodeIds(), rt = relatedThreadIds();
+
+			state.threads.forEach(function (t) {
+				var m = members(t); if (m.length < 2) return;
+				var g = document.createElementNS(NS, 'g');
+				g.setAttribute('class', 'thread' + (rt && !rt[t.id] ? ' faded' : ''));
+				var color = t.color || '#a3232b';
+				var paths = [], hub = null, hubL = null;
+
+				function seg(from, to) {
+					var hit = document.createElementNS(NS, 'path');
+					hit.setAttribute('class', 'hit'); hit.setAttribute('tabindex', '0');
+					hit.setAttribute('role', 'button');
+					hit.setAttribute('aria-label', 'Thread: ' + t.label);
+					var ln = document.createElementNS(NS, 'path');
+					ln.setAttribute('class', 'line'); ln.setAttribute('stroke', color);
+					ln.setAttribute('stroke-width', sel.id === t.id ? 2.6 : 1.7);
+					g.appendChild(hit); g.appendChild(ln);
+					paths.push({ hit: hit, ln: ln, from: from, to: to });
+					hit.addEventListener('click', function (e) { e.stopPropagation(); select('thread', t.id); });
+					hit.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select('thread', t.id); } });
+					hit.addEventListener('pointerenter', function (e) { hot = t.id; showTip(e, t.label, t.description, m.length + ' cards'); highlight(); });
+					hit.addEventListener('pointermove', moveTip);
+					hit.addEventListener('pointerleave', function () { hot = null; hideTip(); highlight(); });
+				}
+
+				if (m.length === 2) { seg(m[0], m[1]); }
+				else {
+					hub = document.createElementNS(NS, 'circle');
+					hub.setAttribute('class', 'hub'); hub.setAttribute('r', '7');
+					hub.setAttribute('fill', color); hub.setAttribute('stroke', '#12151b'); hub.setAttribute('stroke-width', '2.5');
+					hub.setAttribute('tabindex', '0'); hub.setAttribute('role', 'button');
+					hub.setAttribute('aria-label', 'Thread: ' + t.label);
+					hub.addEventListener('click', function (e) { e.stopPropagation(); select('thread', t.id); });
+					hub.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select('thread', t.id); } });
+					hub.addEventListener('pointerenter', function (e) { hot = t.id; showTip(e, t.label, t.description, m.length + ' cards'); highlight(); });
+					hub.addEventListener('pointermove', moveTip);
+					hub.addEventListener('pointerleave', function () { hot = null; hideTip(); highlight(); });
+					m.forEach(function (n) { seg({ get x() { return hubPos.x; }, get y() { return hubPos.y; } }, n); });
+					var hubPos = { x: 0, y: 0 };
+					els.threads[t.id] = { hubPos: hubPos };
+					g.appendChild(hub);
+				}
+				hubL = document.createElementNS(NS, 'text');
+				hubL.setAttribute('class', 'tlabel'); hubL.setAttribute('text-anchor', 'middle');
+				hubL.textContent = t.label;
+				g.appendChild(hubL);
+
+				lg.appendChild(g);
+				els.threads[t.id] = Object.assign(els.threads[t.id] || {}, { g: g, paths: paths, hub: hub, label: hubL });
+			});
+
+			state.nodes.forEach(function (n) {
+				var el = document.createElement('div');
+				el.className = 'card' + (rn && !rn[n.id] ? ' faded' : '') + (sel.id === n.id ? ' sel' : '');
+				el.setAttribute('tabindex', '0'); el.setAttribute('role', 'button');
+				el.setAttribute('aria-label', (KINDS[n.kind] || KINDS.concept).label + ': ' + n.title);
+				el.style.setProperty('--kind', (KINDS[n.kind] || KINDS.concept).color);
+				var img = n.image ? '<img class="thumb" src="' + esc(n.image) + '" alt="" onerror="this.remove()">' : '';
+				el.innerHTML = img + '<div class="body"><div class="kind">' + esc((KINDS[n.kind] || KINDS.concept).label) + '</div>' +
+					'<div class="name">' + esc(n.title) + '</div>' +
+					(n.description ? '<div class="snip">' + esc(n.description) + '</div>' : '') + '</div>';
+				cards.appendChild(el);
+				els.cards[n.id] = el;
+				wireCard(el, n);
+			});
+
+			document.getElementById('empty').classList.toggle('show', state.nodes.length === 0);
+			paint();
+			if (sel.type) drawPanel();
+		}
+
+		function paint() {
+			cards.style.transform = 'translate(' + view.x + 'px,' + view.y + 'px) scale(' + view.k + ')';
+			lg.setAttribute('transform', 'translate(' + view.x + ',' + view.y + ') scale(' + view.k + ')');
+			state.nodes.forEach(function (n) {
+				var el = els.cards[n.id]; if (el) { el.style.left = n.x + 'px'; el.style.top = n.y + 'px'; }
+			});
+			state.threads.forEach(function (t) {
+				var e = els.threads[t.id]; if (!e) return;
+				var m = members(t); if (m.length < 2) return;
+				var c = centroid(m);
+				if (e.hubPos) { e.hubPos.x = c.x; e.hubPos.y = c.y; }
+				if (e.hub) { e.hub.setAttribute('cx', c.x); e.hub.setAttribute('cy', c.y); }
+				e.paths.forEach(function (p) {
+					var d = sagPath({ x: p.from.x, y: p.from.y }, { x: p.to.x, y: p.to.y });
+					p.hit.setAttribute('d', d); p.ln.setAttribute('d', d);
+				});
+				if (e.label) {
+					var ly = m.length === 2 ? (m[0].y + m[1].y) / 2 + Math.min(34, Math.hypot(m[1].x - m[0].x, m[1].y - m[0].y) * 0.11) + 22 : c.y - 16;
+					var lx = m.length === 2 ? (m[0].x + m[1].x) / 2 : c.x;
+					e.label.setAttribute('x', lx); e.label.setAttribute('y', ly);
+				}
+			});
+		}
+		function highlight() {
+			state.threads.forEach(function (t) {
+				var e = els.threads[t.id]; if (!e) return;
+				e.g.classList.toggle('hot', hot === t.id);
+				e.paths.forEach(function (p) { p.ln.setAttribute('stroke-width', (sel.id === t.id || hot === t.id) ? 2.8 : 1.7); });
+			});
+		}
+
+		/* ---------- card interaction ---------- */
+		function wireCard(el, n) {
+			var down = null;
+			el.addEventListener('pointerdown', function (e) {
+				if (e.button !== 0 && e.pointerType === 'mouse') return;
+				el.setPointerCapture(e.pointerId);
+				down = { sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y, moved: false };
+				dragging = n; n.fixed = true; bump(.5); hideTip();
+			});
+			el.addEventListener('pointermove', function (e) {
+				if (!down) return;
+				var dx = (e.clientX - down.sx) / view.k, dy = (e.clientY - down.sy) / view.k;
+				if (Math.abs(dx * view.k) > 3 || Math.abs(dy * view.k) > 3) down.moved = true;
+				n.x = down.ox + dx; n.y = down.oy + dy; paint();
+			});
+			el.addEventListener('pointerup', function (e) {
+				if (!down) return;
+				n.fixed = false; dragging = null;
+				if (down.moved) { n.pinned = true; n.updatedAt = now(); bump(.3); save(); }
+				else select('node', n.id);
+				down = null;
+			});
+			el.addEventListener('pointercancel', function () { n.fixed = false; dragging = null; down = null; });
+			el.addEventListener('keydown', function (e) {
+				if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select('node', n.id); }
+			});
+			el.addEventListener('pointerenter', function (e) {
+				if (dragging) return;
+				showTip(e, n.title, n.description, (KINDS[n.kind] || KINDS.concept).label + ' · ' + threadsOf(n.id).length + ' threads');
+			});
+			el.addEventListener('pointermove', function (e) { if (!down) moveTip(e); });
+			el.addEventListener('pointerleave', hideTip);
+		}
+
+		/* ---------- tooltip ---------- */
+		var tip = document.getElementById('tip');
+		function showTip(e, title, body, meta) {
+			tip.innerHTML = '<strong>' + esc(title) + '</strong>' + (body ? esc(body) : '<i>No notes yet.</i>') +
+				(meta ? '<div style="margin-top:6px;color:#8e8879">' + esc(meta) + '</div>' : '');
+			tip.classList.add('show'); moveTip(e);
+		}
+		function moveTip(e) {
+			var x = e.clientX + 16, y = e.clientY + 16;
+			if (x + 280 > innerWidth) x = e.clientX - tip.offsetWidth - 16;
+			if (y + tip.offsetHeight + 16 > innerHeight) y = e.clientY - tip.offsetHeight - 16;
+			tip.style.left = x + 'px'; tip.style.top = y + 'px';
+		}
+		function hideTip() { tip.classList.remove('show'); }
+
+		/* ---------- pan / zoom ---------- */
+		var board = document.getElementById('board'), pan = null;
+		board.addEventListener('pointerdown', function (e) {
+			if (e.target !== board && e.target.id !== 'grain' && e.target.id !== 'links') return;
+			pan = { sx: e.clientX, sy: e.clientY, ox: view.x, oy: view.y, moved: false };
+			board.classList.add('panning'); board.setPointerCapture(e.pointerId);
+		});
+		board.addEventListener('pointermove', function (e) {
+			if (!pan) return;
+			if (Math.abs(e.clientX - pan.sx) > 3 || Math.abs(e.clientY - pan.sy) > 3) pan.moved = true;
+			view.x = pan.ox + (e.clientX - pan.sx); view.y = pan.oy + (e.clientY - pan.sy); paint();
+		});
+		board.addEventListener('pointerup', function () {
+			if (pan && !pan.moved) deselect();
+			pan = null; board.classList.remove('panning');
+		});
+		board.addEventListener('wheel', function (e) {
+			e.preventDefault();
+			var k = Math.min(2.4, Math.max(.22, view.k * (e.deltaY < 0 ? 1.11 : 1 / 1.11)));
+			var r = k / view.k;
+			view.x = e.clientX - (e.clientX - view.x) * r; view.y = e.clientY - (e.clientY - view.y) * r; view.k = k; paint();
+		}, { passive: false });
+		function zoomBy(f) {
+			var cx = innerWidth / 2, cy = innerHeight / 2;
+			var k = Math.min(2.4, Math.max(.22, view.k * f)), r = k / view.k;
+			view.x = cx - (cx - view.x) * r; view.y = cy - (cy - view.y) * r; view.k = k; paint();
+		}
+		function fit() {
+			if (!state.nodes.length) { view = { x: innerWidth / 2, y: innerHeight / 2, k: 1 }; paint(); return; }
+			var xs = state.nodes.map(function (n) { return n.x; }), ys = state.nodes.map(function (n) { return n.y; });
+			var pad = 170;
+			var minX = Math.min.apply(null, xs) - pad, maxX = Math.max.apply(null, xs) + pad;
+			var minY = Math.min.apply(null, ys) - pad, maxY = Math.max.apply(null, ys) + pad;
+			var w = maxX - minX, h = maxY - minY;
+			var right = document.body.classList.contains('open') && innerWidth > 640 ? Math.min(380, innerWidth) : 0;
+			var vw = innerWidth - right;
+			var k = Math.min(1.15, Math.min(vw / w, innerHeight / h));
+			view.k = Math.max(.22, k);
+			view.x = vw / 2 - ((minX + maxX) / 2) * view.k;
+			view.y = innerHeight / 2 - ((minY + maxY) / 2) * view.k;
+			paint();
+		}
+		document.getElementById('zIn').onclick = function () { zoomBy(1.22); };
+		document.getElementById('zOut').onclick = function () { zoomBy(1 / 1.22); };
+		document.getElementById('zFit').onclick = fit;
+
+		/* ---------- selection + dossier ---------- */
+		function select(type, id) { sel = { type: type, id: id }; editing = false; document.body.classList.add('open'); render(); }
+		function deselect() { sel = { type: null, id: null }; editing = false; document.body.classList.remove('open'); render(); }
+		document.getElementById('close').onclick = deselect;
+		document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (veil.classList.contains('show')) closeModal(); else deselect(); } });
+
+		var pHead = document.getElementById('pHead'), pBody = document.getElementById('pBody');
+
+		function drawPanel() {
+			if (sel.type === 'node') { var n = node(sel.id); if (!n) return deselect(); editing ? nodeForm(n) : nodeView(n); }
+			else if (sel.type === 'thread') { var t = thread(sel.id); if (!t) return deselect(); editing ? threadForm(t) : threadView(t); }
+		}
+		function attribution(o) {
+			return '<div class="meta">Pinned by ' + esc(o.createdBy || 'someone') +
+				(o.updatedBy && o.updatedBy !== o.createdBy ? '<br>Last changed by ' + esc(o.updatedBy) : '') +
+				(o.updatedAt ? '<br>' + esc(when(o.updatedAt)) : '') + '</div>';
+		}
+		function nodeView(n) {
+			pHead.innerHTML = '<div class="eyebrow">' + esc((KINDS[n.kind] || KINDS.concept).label) + '</div><h2 class="title">' + esc(n.title) + '</h2>';
+			var ts = threadsOf(n.id);
+			var html = (n.image ? '<img class="hero" src="' + esc(n.image) + '" alt="" onerror="this.remove()">' : '') +
+				'<p class="desc">' + (n.description ? esc(n.description) : '<i style="color:#8e8879">No notes yet.</i>') + '</p>' +
+				'<div class="sec"><h3>' + (ts.length ? ts.length + ' thread' + (ts.length > 1 ? 's' : '') + ' run through this card' : 'No threads yet') + '</h3>';
+			ts.forEach(function (t) {
+				var others = t.nodeIds.filter(function (i) { return i !== n.id; }).map(node).filter(Boolean);
+				html += '<div class="row"><div class="rowhead"><span class="swatch" style="background:' + esc(t.color || '#a3232b') + '"></span>' +
+					'<button class="link" data-thread="' + t.id + '">' + esc(t.label) + '</button></div><div class="chips">' +
+					(others.length ? others.map(function (o) { return '<button class="chip" data-node="' + o.id + '">' + esc(o.title) + '</button>'; }).join('') : '<span style="color:#8e8879;font-size:12.5px">Nothing on the other end yet</span>') +
+					'</div></div>';
+			});
+			html += '</div>' + attribution(n) +
+				'<div class="acts"><button class="btn primary" id="ed">Edit card</button>' +
+				'<button class="btn" id="unpin">' + (n.pinned ? 'Let it drift' : 'Keep it here') + '</button>' +
+				'<button class="btn danger" id="del">Remove</button></div>';
+			pBody.innerHTML = html;
+			wireLinks();
+			pBody.querySelector('#ed').onclick = function () { withName(function () { editing = true; drawPanel(); }); };
+			pBody.querySelector('#unpin').onclick = function () { n.pinned = !n.pinned; n.updatedAt = now(); bump(.6); render(); save(); };
+			pBody.querySelector('#del').onclick = function () {
+				withName(function () {
+					if (!confirm('Remove "' + n.title + '" and take it off every thread?')) return;
+					state.tombs[n.id] = now();
+					state.nodes = state.nodes.filter(function (x) { return x.id !== n.id; });
+					state.threads.forEach(function (t) {
+						if (t.nodeIds.indexOf(n.id) >= 0) { t.nodeIds = t.nodeIds.filter(function (i) { return i !== n.id; }); t.updatedAt = now(); t.updatedBy = me; }
+					});
+					deselect(); bump(.6); save();
+				});
+			};
+		}
+		function threadView(t) {
+			var m = members(t);
+			pHead.innerHTML = '<div class="eyebrow">Thread</div><h2 class="title">' + esc(t.label) + '</h2>';
+			var html = '<p class="desc">' + (t.description ? esc(t.description) : '<i style="color:#8e8879">No notes yet.</i>') + '</p>' +
+				'<div class="sec"><h3>' + (m.length ? 'Connects ' + m.length + ' cards' : 'Not connected to anything yet') + '</h3>';
+			m.forEach(function (n) {
+				html += '<div class="row"><div class="rowhead"><span class="swatch" style="background:' + esc((KINDS[n.kind] || KINDS.concept).color) + '"></span>' +
+					'<button class="link" data-node="' + n.id + '">' + esc(n.title) + '</button></div>' +
+					(n.description ? '<div style="color:#8e8879;font-size:12.5px;margin-top:5px;line-height:1.5">' + esc(n.description) + '</div>' : '') + '</div>';
+			});
+			html += '</div>' + attribution(t) +
+				'<div class="acts"><button class="btn primary" id="ed">Edit thread</button>' +
+				'<button class="btn danger" id="del">Cut thread</button></div>';
+			pBody.innerHTML = html;
+			wireLinks();
+			pBody.querySelector('#ed').onclick = function () { withName(function () { editing = true; drawPanel(); }); };
+			pBody.querySelector('#del').onclick = function () {
+				withName(function () {
+					if (!confirm('Cut "' + t.label + '"? The cards stay on the board.')) return;
+					state.tombs[t.id] = now();
+					state.threads = state.threads.filter(function (x) { return x.id !== t.id; });
+					deselect(); bump(.5); save();
+				});
+			};
+		}
+		function wireLinks() {
+			Array.prototype.forEach.call(pBody.querySelectorAll('[data-node]'), function (b) {
+				b.onclick = function () { select('node', b.getAttribute('data-node')); };
+			});
+			Array.prototype.forEach.call(pBody.querySelectorAll('[data-thread]'), function (b) {
+				b.onclick = function () { select('thread', b.getAttribute('data-thread')); };
+			});
+		}
+
+		/* ---------- editors ---------- */
+		function nodeForm(n) {
+			var isNew = !node(n.id);
+			pHead.innerHTML = '<div class="eyebrow">' + (isNew ? 'New card' : 'Editing') + '</div><h2 class="title">' + esc(isNew ? 'New card' : n.title) + '</h2>';
+			pBody.innerHTML =
+				'<label class="f">Title<input type="text" id="f-title" value="' + esc(n.title) + '" placeholder="Who, where, or what"></label>' +
+				'<label class="f">Kind<select id="f-kind">' + Object.keys(KINDS).map(function (k) {
+					return '<option value="' + k + '"' + (n.kind === k ? ' selected' : '') + '>' + KINDS[k].label + '</option>';
+				}).join('') + '</select></label>' +
+				'<label class="f">Notes<textarea id="f-desc" placeholder="What you know so far.">' + esc(n.description) + '</textarea></label>' +
+				'<label class="f">Image link<input type="url" id="f-img" value="' + esc(n.image) + '" placeholder="https://"></label>' +
+				'<div class="err" id="f-err"></div>' +
+				'<div class="acts"><button class="btn primary" id="ok">Save card</button><button class="btn" id="cancel">Cancel</button></div>';
+			pBody.querySelector('#f-title').focus();
+			pBody.querySelector('#cancel').onclick = function () {
+				editing = false; if (isNew) deselect(); else drawPanel();
+			};
+			pBody.querySelector('#ok').onclick = function () {
+				var title = pBody.querySelector('#f-title').value.trim();
+				if (!title) { pBody.querySelector('#f-err').textContent = 'Give the card a title first.'; return; }
+				n.title = title;
+				n.kind = pBody.querySelector('#f-kind').value;
+				n.description = pBody.querySelector('#f-desc').value.trim();
+				n.image = pBody.querySelector('#f-img').value.trim();
+				n.updatedBy = me; n.updatedAt = now();
+				if (isNew) { n.createdBy = me; state.nodes.push(n); }
+				editing = false; bump(.7); render(); save();
+			};
+		}
+		function threadForm(t) {
+			var isNew = !thread(t.id);
+			pHead.innerHTML = '<div class="eyebrow">' + (isNew ? 'New thread' : 'Editing') + '</div><h2 class="title">' + esc(isNew ? 'New thread' : t.label) + '</h2>';
+			pBody.innerHTML =
+				'<label class="f">Label<input type="text" id="f-label" value="' + esc(t.label) + '" placeholder="What this connection means"></label>' +
+				'<label class="f">Notes<textarea id="f-desc" placeholder="Why these belong together.">' + esc(t.description) + '</textarea></label>' +
+				'<label class="f">Colour</label><div class="swatches" id="f-colors">' +
+				COLORS.map(function (c) { return '<button class="sw" style="background:' + c + '" data-c="' + c + '" aria-pressed="' + ((t.color || COLORS[0]) === c) + '" aria-label="Colour ' + c + '"></button>'; }).join('') + '</div>' +
+				'<label class="f">Cards on this thread <span id="f-count" style="color:#8e8879"></span></label>' +
+				'<input type="text" id="f-search" placeholder="Filter cards">' +
+				'<div class="picker" id="f-picker"></div>' +
+				'<div class="err" id="f-err"></div>' +
+				'<div class="acts"><button class="btn primary" id="ok">Save thread</button><button class="btn" id="cancel">Cancel</button></div>';
+
+			var chosen = {}; t.nodeIds.forEach(function (i) { chosen[i] = 1; });
+			var color = t.color || COLORS[0];
+			var picker = pBody.querySelector('#f-picker'), count = pBody.querySelector('#f-count');
+			function drawPicker(q) {
+				q = (q || '').toLowerCase();
+				var list = state.nodes.filter(function (n) { return !q || n.title.toLowerCase().indexOf(q) >= 0; });
+				picker.innerHTML = list.length ? list.map(function (n) {
+					return '<label class="pick"><input type="checkbox" data-id="' + n.id + '"' + (chosen[n.id] ? ' checked' : '') + '>' +
+						'<span class="swatch" style="background:' + (KINDS[n.kind] || KINDS.concept).color + '"></span>' +
+						'<span>' + esc(n.title) + '</span></label>';
+				}).join('')
+					: '<div style="padding:12px;color:#8e8879;font-size:12.5px">No cards match.</div>';
+				Array.prototype.forEach.call(picker.querySelectorAll('input'), function (cb) {
+					cb.onchange = function () { if (cb.checked) chosen[cb.getAttribute('data-id')] = 1; else delete chosen[cb.getAttribute('data-id')]; tally(); };
+				});
+			}
+			function tally() { var k = Object.keys(chosen).length; count.textContent = '· ' + k + ' selected'; }
+			drawPicker(''); tally();
+			pBody.querySelector('#f-search').oninput = function (e) { drawPicker(e.target.value); };
+			Array.prototype.forEach.call(pBody.querySelectorAll('#f-colors .sw'), function (b) {
+				b.onclick = function () {
+					color = b.getAttribute('data-c');
+					Array.prototype.forEach.call(pBody.querySelectorAll('#f-colors .sw'), function (x) {
+						x.setAttribute('aria-pressed', x === b);
+					});
+				};
+			});
+			pBody.querySelector('#f-label').focus();
+			pBody.querySelector('#cancel').onclick = function () { editing = false; if (isNew) deselect(); else drawPanel(); };
+			pBody.querySelector('#ok').onclick = function () {
+				var label = pBody.querySelector('#f-label').value.trim();
+				var ids = Object.keys(chosen);
+				if (!label) { pBody.querySelector('#f-err').textContent = 'Give the thread a label first.'; return; }
+				if (ids.length < 2) { pBody.querySelector('#f-err').textContent = 'A thread needs at least two cards.'; return; }
+				t.label = label; t.description = pBody.querySelector('#f-desc').value.trim();
+				t.color = color; t.nodeIds = ids; t.updatedBy = me; t.updatedAt = now();
+				if (isNew) { t.createdBy = me; state.threads.push(t); }
+				editing = false; bump(.8); render(); save();
+			};
+		}
+
+		/* ---------- toolbar ---------- */
+		document.getElementById('addCard').onclick = function () {
+			withName(function () {
+				var n = {
+					id: uid('n'), title: '', kind: 'person', description: '', image: '',
+					x: (-view.x + innerWidth / 2) / view.k, y: (-view.y + innerHeight / 2) / view.k, pinned: false,
+					createdBy: me, updatedBy: me, updatedAt: now()
+				};
+				sel = { type: 'node', id: n.id }; editing = true; document.body.classList.add('open');
+				pendingNode = n; nodeForm(n);
+			});
+		};
+		var pendingNode = null, pendingThread = null;
+		document.getElementById('addThread').onclick = function () {
+			withName(function () {
+				if (state.nodes.length < 2) { alert('Pin at least two cards before running a thread.'); return; }
+				var t = {
+					id: uid('t'), label: '', description: '', color: COLORS[0],
+					nodeIds: sel.type === 'node' ? [sel.id] : [], createdBy: me, updatedBy: me, updatedAt: now()
+				};
+				sel = { type: 'thread', id: t.id }; editing = true; document.body.classList.add('open');
+				pendingThread = t; threadForm(t);
+			});
+		};
+		/* keep pending objects reachable from drawPanel */
+		var _drawPanel = drawPanel;
+		drawPanel = function () {
+			if (editing && sel.type === 'node' && !node(sel.id) && pendingNode && pendingNode.id === sel.id) return nodeForm(pendingNode);
+			if (editing && sel.type === 'thread' && !thread(sel.id) && pendingThread && pendingThread.id === sel.id) return threadForm(pendingThread);
+			_drawPanel();
+		};
+
+		/* ---------- name ---------- */
+		function withName(fn) {
+			if (me) return fn();
+			openModal('<h2>Who is working the board?</h2><p>Changes get signed with this name so everyone can see who moved what.</p>' +
+				'<label class="f">Your name<input type="text" id="m-name" placeholder="e.g. Charlie" maxlength="40"></label>' +
+				'<div class="err" id="m-err"></div>' +
+				'<div class="acts"><button class="btn primary" id="m-ok">Save name</button><button class="btn" id="m-x">Cancel</button></div>');
+			var i = modal.querySelector('#m-name'); i.focus();
+			function commit() {
+				var v = i.value.trim();
+				if (!v) { modal.querySelector('#m-err').textContent = 'Enter a name to keep going.'; return; }
+				me = v; store.set(NAME_KEY, v, false); paintWho(); closeModal(); fn();
+			}
+			i.onkeydown = function (e) { if (e.key === 'Enter') commit(); };
+			modal.querySelector('#m-ok').onclick = commit;
+			modal.querySelector('#m-x').onclick = closeModal;
+		}
+		function paintWho() {
+			document.getElementById('who').innerHTML = me ? 'Signed as <b>' + esc(me) + '</b>' : 'Not signed';
+		}
+		document.getElementById('setName').onclick = function () { me = null; paintWho(); withName(function () { }); };
+
+		/* ---------- modal ---------- */
+		var veil = document.getElementById('veil'), modal = document.getElementById('modal');
+		function openModal(html) { modal.innerHTML = html; veil.classList.add('show'); }
+		function closeModal() { veil.classList.remove('show'); modal.innerHTML = ''; }
+		veil.addEventListener('click', function (e) { if (e.target === veil) closeModal(); });
+
+		/* ---------- import / export ---------- */
+		var SAMPLE = '{\n  "nodes": [\n    { "title": "Vera Lindqvist", "kind": "person",\n      "description": "Archivist. Missing since the third.",\n      "image": "https://example.com/vera.jpg" },\n    { "title": "The Halloway Building", "kind": "place" }\n  ],\n  "threads": [\n    { "label": "Last seen together",\n      "description": "Both inside the same block within an hour.",\n      "color": "#a3232b",\n      "nodes": ["Vera Lindqvist", "The Halloway Building"] }\n  ]\n}';
+
+		document.getElementById('openImport').onclick = function () {
+			withName(function () {
+				openModal('<h2>Import cards and threads</h2>' +
+					'<p>Paste JSON or pick a file. Anything already on the board with a matching title is updated instead of duplicated.</p>' +
+					'<label class="f">JSON<textarea id="i-text" style="min-height:170px" placeholder="Paste here"></textarea></label>' +
+					'<label class="f">…or choose a file<input type="file" id="i-file" accept=".json,application/json" style="margin-top:5px"></label>' +
+					'<div class="note">Threads list their cards by title or id. A title that isn\'t on the board yet becomes a new card.</div>' +
+					'<pre>' + esc(SAMPLE) + '</pre>' +
+					'<div class="err" id="i-err"></div>' +
+					'<div class="acts"><button class="btn primary" id="i-ok">Add to board</button><button class="btn" id="i-x">Cancel</button></div>');
+				modal.querySelector('#i-file').onchange = function (e) {
+					var f = e.target.files[0]; if (!f) return;
+					var r = new FileReader();
+					r.onload = function () { modal.querySelector('#i-text').value = r.result; };
+					r.readAsText(f);
+				};
+				modal.querySelector('#i-x').onclick = closeModal;
+				modal.querySelector('#i-ok').onclick = function () {
+					var err = modal.querySelector('#i-err'), data;
+					try { data = JSON.parse(modal.querySelector('#i-text').value); }
+					catch (ex) { err.textContent = 'That is not valid JSON — ' + ex.message; return; }
+					var res = ingest(data);
+					if (res.error) { err.textContent = res.error; return; }
+					closeModal(); bump(1); render(); save(); setTimeout(fit, 300);
+				};
+			});
+		};
+
+		function ingest(data) {
+			if (!data || typeof data !== 'object') return { error: 'Expected an object with "nodes" and/or "threads".' };
+			var rawNodes = data.nodes || data.cards || [], rawThreads = data.threads || data.links || [];
+			if (!Array.isArray(rawNodes) || !Array.isArray(rawThreads)) return { error: '"nodes" and "threads" both need to be arrays.' };
+			var byTitle = {}, i;
+			state.nodes.forEach(function (n) { byTitle[n.title.toLowerCase()] = n; });
+
+			function ensure(ref) {
+				if (!ref && ref !== 0) return null;
+				var key = String(ref);
+				var hit = node(key) || byTitle[key.toLowerCase()];
+				if (hit) return hit;
+				var n = {
+					id: uid('n'), title: key, kind: 'concept', description: '', image: '',
+					x: (Math.random() - .5) * 400, y: (Math.random() - .5) * 300, pinned: false,
+					createdBy: me, updatedBy: me, updatedAt: now()
+				};
+				state.nodes.push(n); byTitle[key.toLowerCase()] = n; return n;
+			}
+
+			for (i = 0; i < rawNodes.length; i++) {
+				var r = rawNodes[i]; if (!r || !r.title) continue;
+				var ex = (r.id && node(r.id)) || byTitle[String(r.title).toLowerCase()];
+				if (ex) {
+					ex.title = String(r.title);
+					if (r.kind && KINDS[r.kind]) ex.kind = r.kind;
+					if (r.description != null) ex.description = String(r.description);
+					if (r.image != null) ex.image = String(r.image);
+					ex.updatedBy = me; ex.updatedAt = now();
+				} else {
+					var n = {
+						id: r.id || uid('n'), title: String(r.title),
+						kind: KINDS[r.kind] ? r.kind : 'concept',
+						description: r.description ? String(r.description) : '',
+						image: r.image ? String(r.image) : '',
+						x: r.x != null ? +r.x : (Math.random() - .5) * 400, y: r.y != null ? +r.y : (Math.random() - .5) * 300,
+						pinned: !!r.pinned, createdBy: me, updatedBy: me, updatedAt: now()
+					};
+					state.nodes.push(n); byTitle[n.title.toLowerCase()] = n;
+				}
+			}
+			for (i = 0; i < rawThreads.length; i++) {
+				var t = rawThreads[i]; if (!t || !t.label) continue;
+				var refs = t.nodes || t.nodeIds || t.connects || [];
+				if (!Array.isArray(refs)) continue;
+				var ids = refs.map(ensure).filter(Boolean).map(function (n) { return n.id; });
+				var exist = (t.id && thread(t.id)) || state.threads.filter(function (x) { return x.label.toLowerCase() === String(t.label).toLowerCase(); })[0];
+				if (exist) {
+					exist.label = String(t.label);
+					if (t.description != null) exist.description = String(t.description);
+					if (t.color) exist.color = String(t.color);
+					var seen = {}; exist.nodeIds = exist.nodeIds.concat(ids).filter(function (id) {
+						if (seen[id]) return false; seen[id] = 1; return true;
+					});
+					exist.updatedBy = me; exist.updatedAt = now();
+				} else {
+					state.threads.push({
+						id: t.id || uid('t'), label: String(t.label),
+						description: t.description ? String(t.description) : '',
+						color: t.color ? String(t.color) : COLORS[0],
+						nodeIds: ids, createdBy: me, updatedBy: me, updatedAt: now()
+					});
+				}
+			}
+			return { ok: true };
+		}
+
+		document.getElementById('doExport').onclick = function () {
+			var out = {
+				nodes: state.nodes.map(function (n) {
+					return { id: n.id, title: n.title, kind: n.kind, description: n.description, image: n.image, x: Math.round(n.x), y: Math.round(n.y), pinned: !!n.pinned };
+				}),
+				threads: state.threads.map(function (t) {
+					return { id: t.id, label: t.label, description: t.description, color: t.color, nodes: t.nodeIds.slice() };
+				})
+			};
+			var blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+			var a = document.createElement('a');
+			a.href = URL.createObjectURL(blob); a.download = 'board.json'; a.click();
+			setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
+		};
+
+		/* ---------- sound ---------- */
+		var audio = document.getElementById('audio');
+		document.getElementById('openSound').onclick = function () {
+			openModal('<h2>Background sound</h2>' +
+				'<p>Link an MP3 and it loops for everyone who opens the board. A file from this device plays only for you, this session.</p>' +
+				'<label class="f">MP3 link<input type="url" id="s-url" value="' + esc(state.audio.url || '') + '" placeholder="https://example.com/rain.mp3"></label>' +
+				'<label class="f">…or a file from this device<input type="file" id="s-file" accept="audio/*" style="margin-top:5px"></label>' +
+				'<label class="f">Volume<input type="range" id="s-vol" min="0" max="1" step="0.01" value="' + audio.volume + '" style="width:100%;margin-top:8px;accent-color:#a3232b"></label>' +
+				'<div class="err" id="s-err"></div>' +
+				'<div class="acts"><button class="btn primary" id="s-play">' + (audio.paused ? 'Play' : 'Pause') + '</button>' +
+				'<button class="btn" id="s-save">Save link</button><button class="btn" id="s-x">Close</button></div>');
+			var err = modal.querySelector('#s-err');
+			modal.querySelector('#s-vol').oninput = function (e) { audio.volume = +e.target.value; };
+			modal.querySelector('#s-file').onchange = function (e) {
+				var f = e.target.files[0]; if (!f) return;
+				audio.src = URL.createObjectURL(f);
+				audio.play().then(function () { modal.querySelector('#s-play').textContent = 'Pause'; }, function () { });
+			};
+			modal.querySelector('#s-play').onclick = function () {
+				var b = modal.querySelector('#s-play');
+				if (audio.paused) {
+					var u = modal.querySelector('#s-url').value.trim();
+					if (u && audio.src !== u) audio.src = u;
+					if (!audio.src) { err.textContent = 'Add a link or pick a file first.'; return; }
+					audio.play().then(function () { b.textContent = 'Pause'; err.textContent = ''; },
+						function () { err.textContent = 'That file would not play. Check the link allows direct access.'; });
+				} else { audio.pause(); b.textContent = 'Play'; }
+			};
+			modal.querySelector('#s-save').onclick = function () {
+				withName(function () {
+					state.audio = { url: modal.querySelector('#s-url').value.trim(), at: now(), by: me };
+					save(); closeModal();
+				});
+			};
+			modal.querySelector('#s-x').onclick = closeModal;
+		};
+
+		/* ---------- boot ---------- */
+		document.getElementById('refresh').onclick = function () { pull(); };
+		window.addEventListener('resize', paint);
+		setInterval(function () { if (!editing && !veil.classList.contains('show') && !dragging) pull(); }, 20000);
+
+		Promise.all([store.get(KEY, true), store.get(NAME_KEY, false)]).then(function (r) {
+			var raw = r[0]; me = r[1] || null; paintWho();
+			var loaded = null; try { loaded = raw ? JSON.parse(raw) : null; } catch (e) { }
+			if (loaded && loaded.nodes && loaded.nodes.length) {
+				state = { nodes: loaded.nodes, threads: loaded.threads || [], audio: loaded.audio || { url: '' }, tombs: loaded.tombs || {} };
+				state.threads.forEach(function (t) { t.nodeIds = t.nodeIds || []; });
+			} else { seed(); }
+			if (state.audio && state.audio.url) audio.src = state.audio.url;
+			render(); bump(1);
+			setTimeout(fit, 700);
+			if (!raw) save();
+		}).catch(function () { seed(); render(); bump(1); setTimeout(fit, 700); });
+
+	})();
+</script>
