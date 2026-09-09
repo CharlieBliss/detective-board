@@ -192,3 +192,93 @@ async def test_update_and_delete_thread(client: AsyncClient):
     board_res = await client.get("/api/board")
     assert any(n["id"] == n1["id"] for n in board_res.json()["nodes"])
 
+async def test_bulk_import_arbitrary_string_and_integer_identifiers(client: AsyncClient):
+    # Upload JSON using string IDs and non-standard capitalization/labels
+    payload = {
+        "nodes": [
+            {
+                "id": "suspect_alpha",
+                "title": "Alpha Suspect",
+                "type": "PERSON",
+                "description": "Primary subject.",
+            },
+            {
+                "id": "pier_loc",
+                "title": "Pier 9",
+                "type": "location", # synonym for place
+                "description": "Dockside.",
+            },
+            {
+                "id": 55, # integer ID
+                "title": "Coded Note",
+                "type": "evidence", # synonym for concept
+                "description": "Scrap of paper.",
+            },
+        ],
+        "threads": [
+            {
+                "id": "thread_meeting",
+                "title": "Pier Meeting",
+                "description": "Alpha was seen at the pier with the note.",
+                "connected_nodes": ["suspect_alpha", "pier_loc", 55],
+            }
+        ],
+    }
+
+    res = await client.post(
+        "/api/board/import",
+        json=payload,
+        headers={"X-User-Name": "Officer Jenny"},
+    )
+    assert res.status_code == 200
+    assert res.json()["nodes_imported"] == 3
+    assert res.json()["threads_imported"] == 1
+
+    # Verify board state
+    board_res = await client.get("/api/board")
+    b_data = board_res.json()
+    assert len(b_data["nodes"]) >= 3
+    alpha_node = next(n for n in b_data["nodes"] if n["title"] == "Alpha Suspect")
+    assert alpha_node["type"] == "person"
+    pier_node = next(n for n in b_data["nodes"] if n["title"] == "Pier 9")
+    assert pier_node["type"] == "place"
+    note_node = next(n for n in b_data["nodes"] if n["title"] == "Coded Note")
+    assert note_node["type"] == "concept"
+
+    meeting_thread = next(t for t in b_data["threads"] if t["title"] == "Pier Meeting")
+    assert len(meeting_thread["connected_nodes"]) == 3
+    assert set(meeting_thread["connected_nodes"]) == {
+        alpha_node["id"],
+        pier_node["id"],
+        note_node["id"],
+    }
+
+    # Verify upserting with the same string IDs updates rather than duplicates
+    update_payload = {
+        "nodes": [
+            {
+                "id": "suspect_alpha",
+                "title": "Alpha Suspect (IN CUSTODY)",
+                "type": "person",
+            }
+        ],
+        "threads": [
+            {
+                "id": "thread_meeting",
+                "title": "Pier Meeting - CLOSED",
+                "connected_nodes": ["suspect_alpha"],
+            }
+        ],
+    }
+    upd_res = await client.post("/api/board/import", json=update_payload)
+    assert upd_res.status_code == 200
+
+    board_res2 = await client.get("/api/board")
+    b_data2 = board_res2.json()
+    updated_alpha = next(n for n in b_data2["nodes"] if n["title"] == "Alpha Suspect (IN CUSTODY)")
+    assert updated_alpha["id"] == alpha_node["id"]
+    updated_thread = next(t for t in b_data2["threads"] if t["title"] == "Pier Meeting - CLOSED")
+    assert updated_thread["id"] == meeting_thread["id"]
+    assert updated_thread["connected_nodes"] == [alpha_node["id"]]
+
+

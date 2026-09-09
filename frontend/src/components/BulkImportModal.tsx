@@ -161,25 +161,54 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
       setLoading(true);
       setError(null);
       const parsed = JSON.parse(jsonText);
+      let payloadToImport = parsed;
 
-      if (!parsed.nodes && !parsed.threads) {
-        throw new Error('JSON must contain "nodes" or "threads" arrays.');
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.data && typeof parsed.data === 'object') {
+          payloadToImport = parsed.data;
+        } else if (parsed.board && typeof parsed.board === 'object') {
+          payloadToImport = parsed.board;
+        }
+      }
+
+      if (Array.isArray(payloadToImport)) {
+        payloadToImport = { nodes: payloadToImport, threads: [] };
+      }
+
+      if (!payloadToImport.nodes && !payloadToImport.threads) {
+        throw new Error('JSON must contain "nodes" or "threads" list.');
       }
 
       await api.importBoard({
-        nodes: parsed.nodes || [],
-        threads: parsed.threads || [],
+        nodes: payloadToImport.nodes || [],
+        threads: payloadToImport.threads || [],
       });
 
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error(err);
-      setError(err?.response?.data?.detail || err.message || 'Import failed. Check JSON format.');
+      console.error('Import error:', err);
+      let msg = 'Import failed. Please verify JSON structure.';
+      if (err?.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        if (Array.isArray(detail)) {
+          msg = detail
+            .map((d: any) => `${d.loc ? d.loc.slice(-2).join('.') + ': ' : ''}${d.msg}`)
+            .join(' | ');
+        } else if (typeof detail === 'string') {
+          msg = detail;
+        } else {
+          msg = JSON.stringify(detail);
+        }
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

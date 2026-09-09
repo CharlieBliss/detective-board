@@ -1,118 +1,530 @@
 {
   "nodes": [
     {
-      "id": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
-      "title": "Vincent 'Viper' Marcone",
-      "type": "person",
-      "description": "Notorious underworld enforcer. Rumored to be coordinating illicit diamond transport through the shipping harbor.",
-      "image_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80"
+      "id": "pc_scarlet",
+      "title": "Scarlet Night",
+      "type": "character",
+      "description": "Player character. Connected by blood to the slain Regent; her mother's unsolved murder is tied to the deeper mystery beneath the city. Currently the target of an assassination plot.",
+      "image_url": ""
     },
     {
-      "id": "b2c3d4e5-f6a1-4b5c-9d0e-1f2a3b4c5d6e",
-      "title": "Evelyn Reed",
-      "type": "person",
-      "description": "Star chanteuse at The Velvet Room. Possesses intimate knowledge of city hall officials and illicit payoffs.",
-      "image_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80"
+      "id": "pc_mazza",
+      "title": "Mazza Stoneclaw",
+      "type": "character",
+      "description": "Player character. Heir to the Stoneclaw estate, whose family history holds hidden clues, including an encoded painting left behind by the Regent.",
+      "image_url": ""
     },
     {
-      "id": "c3d4e5f6-a1b2-4c5d-0e1f-2a3b4c5d6e7f",
-      "title": "Silas Thorne",
-      "type": "person",
-      "description": "Black-market broker and antiquities dealer. Operates behind a pawnshop facade on 4th Street.",
-      "image_url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80"
+      "id": "pc_malachi",
+      "title": "Malachi Thorne",
+      "type": "character",
+      "description": "Player character. An archivist with ties to the Mages Tower, recently drawn into a dangerous conversation with a devil offering an open contract.",
+      "image_url": ""
     },
     {
-      "id": "d4e5f6a1-b2c3-4d5e-1f2a-3b4c5d6e7f8a",
-      "title": "The Velvet Room",
-      "type": "place",
-      "description": "Subterranean jazz lounge where shadowy figures, bootleggers, and politicians convene under dim red lights.",
-      "image_url": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=300&auto=format&fit=crop&q=80"
+      "id": "pc_firzen",
+      "title": "Firzen Tor",
+      "type": "character",
+      "description": "Player character. Driven by a personal vendetta that has made him a target for manipulation by outside forces.",
+      "image_url": ""
     },
     {
-      "id": "e5f6a1b2-c3d4-4e5f-2a3b-4c5d6e7f8a9b",
-      "title": "Pier 42 Warehouse",
-      "type": "place",
-      "description": "Derelict coastal warehouse with rusted cranes. Site of late-night shipping crate transfers without manifest records.",
-      "image_url": "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=300&auto=format&fit=crop&q=80"
+      "id": "pc_allegra",
+      "title": "Allegra Bardeau",
+      "type": "character",
+      "description": "Player character, part of the party investigating the succession crisis and its hidden currents.",
+      "image_url": ""
+    },
+
+    {
+      "id": "npc_ciri",
+      "title": "Regent Cerulean \"Ciri\" Night",
+      "type": "character",
+      "description": "The assassinated Regent whose death triggered the succession crisis. Left behind a series of encoded landscape paintings hiding critical secrets.",
+      "image_url": ""
     },
     {
-      "id": "f6a1b2c3-d4e5-4f6a-3b4c-5d6e7f8a9b0c",
-      "title": "Grand Pacific Vault",
-      "type": "place",
-      "description": "Fortified vault deposit where safety box #314 was breached during the thunderstorm of October 14th.",
-      "image_url": "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f3?w=300&auto=format&fit=crop&q=80"
+      "id": "npc_trenico",
+      "title": "Cardinal Titus Trenico",
+      "type": "character",
+      "description": "A respected Abadarian priest and prominent voice in the Church faction during the succession crisis. Publicly a moderate, rational influence on the city's politics.",
+      "image_url": ""
     },
     {
-      "id": "11111111-2222-3333-4444-555555555555",
-      "title": "The Blue Star Diamond",
+      "id": "npc_zusi",
+      "title": "Zusi Absolom",
+      "type": "character",
+      "description": "A Diabolist contact who recruited the party into a dangerous scheme involving the imprisoned mage Sam Szimani.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_eiloron",
+      "title": "Eiloron",
+      "type": "character",
+      "description": "A figure entangled with Sam Szimani's imprisonment, wary of disturbing whatever binds the Old City's secrets, and at odds with Szimani over how to proceed.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_owale",
+      "title": "Lia Owale",
+      "type": "character",
+      "description": "President of the Guildhead council. A leading suspect in the Guild's apparent connection to the Conclave attack.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_veng",
+      "title": "General Thao Veng",
+      "type": "character",
+      "description": "A military leader implicated by circumstantial threads in the unfolding conspiracy around the Conclave attack.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_sinclair",
+      "title": "Janus Sinclair",
+      "type": "character",
+      "description": "A recurring figure in the city's political undercurrents.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_aethel",
+      "title": "Aethel Auberge",
+      "type": "character",
+      "description": "Revealed to be a vampire; responsible for turning Lieutenant Ewan. Her family's fate is entangled with the assassination plot against Scarlet.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_evie",
+      "title": "Evie Auberge",
+      "type": "character",
+      "description": "A figure whose survival hangs on whether the party can intervene in time during the plot against Scarlet Night.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_ewan",
+      "title": "Lieutenant Ewan",
+      "type": "character",
+      "description": "A city officer secretly turned into a vampire by Aethel Auberge.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_carrath",
+      "title": "Archivist Senne Carrath",
+      "type": "character",
+      "description": "Malachi Thorne's superior, connected to the Mages Tower and its archives.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_erza",
+      "title": "Erza",
+      "type": "character",
+      "description": "A Deimavigga devil who has extended an open contract offer to Malachi Thorne.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_szimani",
+      "title": "Sam Szimani",
+      "type": "character",
+      "description": "An imprisoned mage held in a pocket-dimension prison beneath the Mages Tower. Believes fully investigating Scarlet's mother's murder is the way to lift a lingering curse.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_chihira",
+      "title": "Chihira Sendarme",
+      "type": "character",
+      "description": "A halfling orphan and ward of Selwyn Sendarme who has traveled with the party.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_selwyn",
+      "title": "Selwyn Sendarme",
+      "type": "character",
+      "description": "Guardian of Chihira Sendarme.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_bandit",
+      "title": "Bandit",
+      "type": "character",
+      "description": "A mercenary known only by callsign, encountered in the party's investigations.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_graverobber",
+      "title": "Graverobber",
+      "type": "character",
+      "description": "A mercenary known only by callsign, whose own thread remains unresolved.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_warlock",
+      "title": "Warlock (deceased)",
+      "type": "character",
+      "description": "A mercenary known only by callsign. Killed during prior events.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_torturer",
+      "title": "Torturer",
+      "type": "character",
+      "description": "A mercenary known only by callsign, part of the roster the party has encountered.",
+      "image_url": ""
+    },
+    {
+      "id": "npc_sapper",
+      "title": "Sapper",
+      "type": "character",
+      "description": "A mercenary known only by callsign, part of the roster the party has encountered.",
+      "image_url": ""
+    },
+
+    {
+      "id": "faction_nobility",
+      "title": "The Nobility",
+      "type": "faction",
+      "description": "One of the five factions vying for power in the succession crisis following the Regent's assassination.",
+      "image_url": ""
+    },
+    {
+      "id": "faction_guilds",
+      "title": "The Guilds",
+      "type": "faction",
+      "description": "One of the five factions in the succession crisis. Circumstantial evidence links the Assassins' Guild to the Conclave attack and the land of Tarva.",
+      "image_url": ""
+    },
+    {
+      "id": "faction_mages",
+      "title": "The Mages",
+      "type": "faction",
+      "description": "One of the five factions in the succession crisis, centered on the Mages Tower.",
+      "image_url": ""
+    },
+    {
+      "id": "faction_diabolists",
+      "title": "The Diabolists",
+      "type": "faction",
+      "description": "One of the five factions in the succession crisis, operating through contracts and infernal bargains.",
+      "image_url": ""
+    },
+    {
+      "id": "faction_church",
+      "title": "The Church",
+      "type": "faction",
+      "description": "One of the five factions in the succession crisis. Cardinal Trenico is among its most prominent voices.",
+      "image_url": ""
+    },
+    {
+      "id": "faction_tarva",
+      "title": "Tarva",
+      "type": "faction",
+      "description": "A foreign land increasingly implicated by evidence trails in the Conclave attack, raising the specter of regional war.",
+      "image_url": ""
+    },
+
+    {
+      "id": "event_assassination",
+      "title": "Assassination of Regent Ciri Night",
+      "type": "event",
+      "description": "The killing that set off the current succession crisis among the city's five factions.",
+      "image_url": ""
+    },
+    {
+      "id": "event_conclave_attack",
+      "title": "The Conclave Attack",
+      "type": "event",
+      "description": "A violent incident increasingly tied to Tarva through an evidence trail, with the Assassins' Guild implicated as the hired hand.",
+      "image_url": ""
+    },
+    {
+      "id": "event_safehouse_raid",
+      "title": "Assassins' Guild Safehouse Discovery",
+      "type": "event",
+      "description": "The party traced a Tengu hit squad to this safehouse, uncovering evidence connecting the Guild to Tarva.",
+      "image_url": ""
+    },
+    {
+      "id": "event_scarlet_threat",
+      "title": "Plot Against Scarlet Night",
+      "type": "event",
+      "description": "An active, time-sensitive threat to Scarlet's life. Outcomes hinge on whether the party intervenes in time.",
+      "image_url": ""
+    },
+    {
+      "id": "event_stoneclaw_reunion",
+      "title": "Stoneclaw Estate Reunion",
+      "type": "event",
+      "description": "Mazza's return to the family estate, where an encoded painting puzzle was discovered.",
+      "image_url": ""
+    },
+    {
+      "id": "event_aethel_reveal",
+      "title": "Aethel Auberge Revealed as Vampire",
+      "type": "event",
+      "description": "The party discovered Aethel's true nature and her turning of Lieutenant Ewan.",
+      "image_url": ""
+    },
+    {
+      "id": "event_devil_consultation",
+      "title": "Malachi's Devil Consultation",
+      "type": "event",
+      "description": "A meeting interrupted by Erza's offer of an open contract.",
+      "image_url": ""
+    },
+    {
+      "id": "event_tower_infiltration",
+      "title": "Mages Tower Infiltration (Planned)",
+      "type": "event",
+      "description": "An upcoming or in-progress attempt to reach the pocket-dimension prison beneath the Mages Tower to find Sam Szimani.",
+      "image_url": ""
+    },
+
+    {
+      "id": "location_old_city",
+      "title": "The Old City (theorized: Goruveah)",
+      "type": "location",
+      "description": "A buried, older layer of the city referenced in the encoded painting clues. Its true name is an unconfirmed player theory.",
+      "image_url": ""
+    },
+    {
+      "id": "location_mages_tower",
+      "title": "Mages Tower",
+      "type": "location",
+      "description": "Seat of the Mages faction, beneath which lies a pocket-dimension prison holding Sam Szimani.",
+      "image_url": ""
+    },
+    {
+      "id": "location_stoneclaw_estate",
+      "title": "Stoneclaw Estate",
+      "type": "location",
+      "description": "Mazza's family estate, site of the discovery of the Regent's encoded landscape paintings.",
+      "image_url": ""
+    },
+    {
+      "id": "location_guild_safehouse",
+      "title": "Assassins' Guild Safehouse",
+      "type": "location",
+      "description": "A hideout tied to the Tengu hit squad, containing evidence linking the Guild to Tarva.",
+      "image_url": ""
+    },
+
+    {
+      "id": "item_painting",
+      "title": "Cerulean's Encoded Paintings",
+      "type": "item",
+      "description": "A series of landscape paintings that, viewed through a transparent overlay, reveal Old City entrances, the location of the Sword of Sealing, a regent ascension ritual, a numerical sequence, and a partial clue to a forgotten figure's identity.",
+      "image_url": ""
+    },
+    {
+      "id": "item_sword",
+      "title": "The Sword of Sealing",
+      "type": "item",
+      "description": "An artifact whose location was revealed within the encoded paintings. Its true purpose remains an open mystery.",
+      "image_url": ""
+    },
+
+    {
+      "id": "concept_succession_crisis",
+      "title": "The Succession Crisis",
       "type": "concept",
-      "description": "A rare 45-carat sapphire-blue diamond, vanished from safety deposit box #314 without tripping perimeter sensors.",
-      "image_url": "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=300&auto=format&fit=crop&q=80"
+      "description": "The overarching political conflict among the five factions following the Regent's assassination.",
+      "image_url": ""
     },
     {
-      "id": "22222222-3333-4444-5555-666666666666",
-      "title": "The Albatross Ledger",
+      "id": "concept_erased_hero",
+      "title": "The Erased Hero",
       "type": "concept",
-      "description": "Leather-bound cipher book detailing bribes paid to harbor customs inspectors and precinct captains.",
-      "image_url": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&auto=format&fit=crop&q=80"
+      "description": "A forgotten founding figure hinted at by a partial initial found in the encoded paintings. Their full identity remains an open mystery to the party.",
+      "image_url": ""
     },
     {
-      "id": "33333333-4444-5555-6666-777777777777",
-      "title": "Midnight Drop",
+      "id": "concept_curse",
+      "title": "The Curse",
       "type": "concept",
-      "description": "Scheduled exchange coordinated via telegraph codes for 02:00 hours at low tide under the fog.",
-      "image_url": "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?w=300&auto=format&fit=crop&q=80"
+      "description": "A lingering affliction tied to Scarlet's mother's unsolved murder. Szimani and Eiloron disagree sharply on whether pursuing its cause is worth the risk.",
+      "image_url": ""
     },
     {
-      "id": "44444444-5555-6666-7777-888888888888",
-      "title": "Cyanide Vials",
+      "id": "concept_diabolist_contract",
+      "title": "The Diabolist Contract",
       "type": "concept",
-      "description": "Pharmaceutical glass ampoules labeled 'Reagent B' discovered behind the condenser coils at Pier 42.",
-      "image_url": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=80"
+      "description": "An unfolding arrangement drawing Malachi toward the Diabolist faction, mediated by Zusi Absolom and complicated by Erza's rival offer.",
+      "image_url": ""
     }
   ],
   "threads": [
     {
-      "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-      "title": "The Vault Infiltration Syndicate",
-      "description": "Connecting the inside man, fencing operative, breached vault, and stolen gem.",
+      "id": "thread_succession",
+      "title": "Five Factions, One Throne",
+      "description": "The Nobility, Guilds, Mages, Diabolists, and Church all maneuver for power after the Regent's death.",
       "connected_nodes": [
-        "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
-        "c3d4e5f6-a1b2-4c5d-0e1f-2a3b4c5d6e7f",
-        "f6a1b2c3-d4e5-4f6a-3b4c-5d6e7f8a9b0c",
-        "11111111-2222-3333-4444-555555555555"
+        "concept_succession_crisis",
+        "faction_nobility",
+        "faction_guilds",
+        "faction_mages",
+        "faction_diabolists",
+        "faction_church",
+        "event_assassination"
       ]
     },
     {
-      "id": "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
-      "title": "Speakeasy Payoff Channel",
-      "description": "Evelyn Reed acts as courier exchanging ledger codes with informants in the back booths.",
+      "id": "thread_assassination_origin",
+      "title": "The Regent's Death",
+      "description": "Ciri Night's assassination is the spark that ignited the entire current conflict.",
       "connected_nodes": [
-        "b2c3d4e5-f6a1-4b5c-9d0e-1f2a3b4c5d6e",
-        "d4e5f6a1-b2c3-4d5e-1f2a-3b4c5d6e7f8a",
-        "22222222-3333-4444-5555-666666666666"
+        "event_assassination",
+        "npc_ciri",
+        "pc_scarlet",
+        "concept_succession_crisis"
       ]
     },
     {
-      "id": "cccccccc-dddd-eeee-ffff-000000000000",
-      "title": "Pier 42 Midnight Poison Protocol",
-      "description": "Viper Marcone staged the midnight drop at Pier 42 with cyanide vials prepared in case of police intervention.",
+      "id": "thread_guild_tarva",
+      "title": "A Trail to Tarva",
+      "description": "Evidence recovered at the Guild safehouse points toward Tarva's involvement in the Conclave attack, with the Assassins' Guild as the hired hand.",
       "connected_nodes": [
-        "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
-        "e5f6a1b2-c3d4-4e5f-2a3b-4c5d6e7f8a9b",
-        "33333333-4444-5555-6666-777777777777",
-        "44444444-5555-6666-7777-888888888888"
+        "event_safehouse_raid",
+        "location_guild_safehouse",
+        "event_conclave_attack",
+        "faction_tarva",
+        "faction_guilds"
       ]
     },
     {
-      "id": "dddddddd-eeee-ffff-0000-111111111111",
-      "title": "Blackmail Over the Cipher Ledger",
-      "description": "Thorne attempted to blackmail Evelyn using pages stolen from the Albatross Ledger.",
+      "id": "thread_red_herrings",
+      "title": "Suspects in the Shadows",
+      "description": "Owale and Veng have both drawn suspicion in connection with the Guild-Tarva evidence, though neither's guilt is confirmed.",
       "connected_nodes": [
-        "c3d4e5f6-a1b2-4c5d-0e1f-2a3b4c5d6e7f",
-        "b2c3d4e5-f6a1-4b5c-9d0e-1f2a3b4c5d6e",
-        "22222222-3333-4444-5555-666666666666"
+        "npc_owale",
+        "npc_veng",
+        "event_conclave_attack",
+        "faction_guilds"
       ]
+    },
+    {
+      "id": "thread_scarlet_danger",
+      "title": "A Race Against Time",
+      "description": "The party is racing to prevent an assassination attempt on Scarlet Night, with Evie Auberge's survival and Scarlet's wellbeing hanging in the balance.",
+      "connected_nodes": [
+        "event_scarlet_threat",
+        "pc_scarlet",
+        "npc_evie",
+        "npc_aethel"
+      ]
+    },
+    {
+      "id": "thread_vampire_conspiracy",
+      "title": "Hidden Fangs",
+      "description": "Aethel Auberge's true nature as a vampire, and her turning of Lieutenant Ewan, ties her family directly into the danger surrounding Scarlet.",
+      "connected_nodes": [
+        "npc_aethel",
+        "npc_ewan",
+        "event_aethel_reveal",
+        "npc_evie"
+      ]
+    },
+    {
+      "id": "thread_stoneclaw_puzzle",
+      "title": "The Painted Clues",
+      "description": "The Stoneclaw estate reunion uncovered a hidden overlay within the Regent's paintings, revealing several major secrets at once.",
+      "connected_nodes": [
+        "event_stoneclaw_reunion",
+        "location_stoneclaw_estate",
+        "pc_mazza",
+        "item_painting",
+        "location_old_city",
+        "item_sword",
+        "concept_erased_hero"
+      ]
+    },
+    {
+      "id": "thread_erased_hero_mystery",
+      "title": "Who Was Erased?",
+      "description": "A partial initial found in the paintings hints at a forgotten founding figure whose full identity remains unknown to the party.",
+      "connected_nodes": [
+        "concept_erased_hero",
+        "item_painting",
+        "location_old_city"
+      ]
+    },
+    {
+      "id": "thread_diabolist_recruitment",
+      "title": "A Devil's Bargain",
+      "description": "Zusi Absolom drew the party into a scheme to reach the imprisoned Sam Szimani, while Erza's rival contract offer complicates Malachi's path.",
+      "connected_nodes": [
+        "npc_zusi",
+        "pc_malachi",
+        "npc_erza",
+        "event_devil_consultation",
+        "concept_diabolist_contract",
+        "npc_szimani"
+      ]
+    },
+    {
+      "id": "thread_tower_infiltration",
+      "title": "Beneath the Mages Tower",
+      "description": "The party's plan to breach the pocket-dimension prison and reach Sam Szimani, complicated by Eiloron's involvement.",
+      "connected_nodes": [
+        "event_tower_infiltration",
+        "location_mages_tower",
+        "npc_szimani",
+        "npc_eiloron"
+      ]
+    },
+    {
+      "id": "thread_curse_schism",
+      "title": "To Lift or Not to Lift",
+      "description": "Szimani and Eiloron are at odds over whether investigating Scarlet's mother's murder is worth the risk it poses.",
+      "connected_nodes": [
+        "npc_szimani",
+        "npc_eiloron",
+        "concept_curse",
+        "pc_scarlet"
+      ]
+    },
+    {
+      "id": "thread_mercenary_roster",
+      "title": "The Hired Guns",
+      "description": "A network of mercenaries known only by callsign has crossed paths with the party repeatedly, with varying loyalties.",
+      "connected_nodes": [
+        "npc_bandit",
+        "npc_graverobber",
+        "npc_warlock",
+        "npc_torturer",
+        "npc_sapper"
+      ]
+    },
+    {
+      "id": "thread_graverobber_loose_end",
+      "title": "Graverobber's Unfinished Business",
+      "description": "A parallel thread involving Graverobber has been raised but not yet resolved.",
+      "connected_nodes": ["npc_graverobber"]
+    },
+    {
+      "id": "thread_chihira_travels",
+      "title": "The Ward Who Travels With Them",
+      "description": "Chihira Sendarme, ward of Selwyn Sendarme, has accompanied the party through recent events.",
+      "connected_nodes": ["npc_chihira", "npc_selwyn"]
+    },
+    {
+      "id": "thread_church_politics",
+      "title": "A Voice of Reason?",
+      "description": "Cardinal Trenico stands as a prominent, seemingly moderate figure representing the Church faction amid the crisis.",
+      "connected_nodes": [
+        "npc_trenico",
+        "faction_church",
+        "concept_succession_crisis"
+      ]
+    },
+    {
+      "id": "thread_firzen_vendetta",
+      "title": "An Old Grudge",
+      "description": "Firzen's personal vendetta continues to shape his choices and draw outside attention.",
+      "connected_nodes": ["pc_firzen"]
+    },
+    {
+      "id": "thread_carrath_archive",
+      "title": "The Archivist's Ledger",
+      "description": "Malachi's ties to Archivist Senne Carrath connect him to the Mages Tower's deeper resources.",
+      "connected_nodes": ["npc_carrath", "pc_malachi", "location_mages_tower"]
     }
   ]
 }
