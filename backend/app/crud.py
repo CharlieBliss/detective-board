@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy import select, delete, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Node, Thread, thread_node_links
+from app.models import Node, Thread, thread_node_links, BoardMeta
 from app.schemas import (
     NodeCreate,
     NodeUpdate,
@@ -16,6 +16,7 @@ from app.schemas import (
     BoardStateResponse,
     BulkImportPayload,
 )
+
 
 async def get_all_nodes(db: AsyncSession) -> List[Node]:
     result = await db.execute(select(Node).order_by(Node.title))
@@ -166,7 +167,55 @@ async def delete_thread(db: AsyncSession, thread: Thread) -> None:
     await db.delete(thread)
     await db.commit()
 
+async def get_or_create_board_meta(db: AsyncSession) -> BoardMeta:
+    result = await db.execute(select(BoardMeta).where(BoardMeta.id == "default"))
+    meta = result.scalar_one_or_none()
+    if not meta:
+        meta = BoardMeta(id="default", title="CASE FILE: THE CRAZY WALL")
+        db.add(meta)
+        await db.commit()
+        await db.refresh(meta)
+    return meta
+
+async def update_board_title(
+    db: AsyncSession, title: str, user_name: Optional[str] = None
+) -> BoardStateResponse:
+    meta = await get_or_create_board_meta(db)
+    meta.title = title.strip()
+    if user_name:
+        meta.last_edited_by = user_name
+    await db.commit()
+    await db.refresh(meta)
+    return await get_board_state(db)
+
+async def create_new_empty_board(
+    db: AsyncSession, title: Optional[str] = None, user_name: Optional[str] = None
+) -> BoardStateResponse:
+    # Atomic transaction: clear all links, threads, nodes, and reset board meta
+    async with db.begin_nested():
+        await db.execute(delete(thread_node_links))
+        await db.execute(delete(Thread))
+        await db.execute(delete(Node))
+
+        meta_res = await db.execute(select(BoardMeta).where(BoardMeta.id == "default"))
+        meta = meta_res.scalar_one_or_none()
+        if not meta:
+            meta = BoardMeta(id="default")
+            db.add(meta)
+        meta.title = (title or "NEW INVESTIGATION CASE").strip()
+        if user_name:
+            meta.last_edited_by = user_name
+
+    await db.commit()
+    return BoardStateResponse(
+        title=meta.title,
+        last_edited_by=meta.last_edited_by,
+        nodes=[],
+        threads=[],
+    )
+
 async def get_board_state(db: AsyncSession) -> BoardStateResponse:
+    meta = await get_or_create_board_meta(db)
     nodes = await get_all_nodes(db)
     threads_result = await db.execute(select(Thread).order_by(Thread.title))
     threads = list(threads_result.scalars().all())
@@ -189,15 +238,33 @@ async def get_board_state(db: AsyncSession) -> BoardStateResponse:
         for t in threads
     ]
 
-    return BoardStateResponse(nodes=nodes_response, threads=threads_response)
+    return BoardStateResponse(
+        title=meta.title,
+        last_edited_by=meta.last_edited_by,
+        nodes=nodes_response,
+        threads=threads_response,
+    )
+
 
 async def bulk_import_board(
     db: AsyncSession, payload: BulkImportPayload, user_name: Optional[str] = None
 ) -> Dict[str, int]:
     # Single database transaction to prevent partial commits
     async with db.begin_nested():
+        # 0. Update board title if provided in import payload
+        if payload.title:
+            meta_res = await db.execute(select(BoardMeta).where(BoardMeta.id == "default"))
+            meta = meta_res.scalar_one_or_none()
+            if not meta:
+                meta = BoardMeta(id="default")
+                db.add(meta)
+            meta.title = payload.title.strip()
+            if user_name:
+                meta.last_edited_by = user_name
+
         # 1. Fetch existing nodes
         all_nodes_result = await db.execute(select(Node))
+
         node_map: Dict[UUID, Node] = {n.id: n for n in all_nodes_result.scalars().all()}
 
         # 2. Upsert nodes

@@ -281,4 +281,55 @@ async def test_bulk_import_arbitrary_string_and_integer_identifiers(client: Asyn
     assert updated_thread["id"] == meeting_thread["id"]
     assert updated_thread["connected_nodes"] == [alpha_node["id"]]
 
+async def test_update_board_name(client: AsyncClient):
+    # Verify initial default board title
+    board_res = await client.get("/api/board")
+    assert board_res.status_code == 200
+    assert board_res.json()["title"] == "CASE FILE: THE CRAZY WALL"
+
+    # Update board title
+    update_res = await client.put(
+        "/api/board",
+        json={"title": "OPERATION NIGHTFALL: THE HARBOR HEIST"},
+        headers={"X-User-Name": "Agent Cooper"},
+    )
+    assert update_res.status_code == 200
+    assert update_res.json()["title"] == "OPERATION NIGHTFALL: THE HARBOR HEIST"
+    assert update_res.json()["last_edited_by"] == "Agent Cooper"
+
+    # Verify title persists on GET /api/board
+    check_res = await client.get("/api/board")
+    assert check_res.json()["title"] == "OPERATION NIGHTFALL: THE HARBOR HEIST"
+    assert check_res.json()["last_edited_by"] == "Agent Cooper"
+
+async def test_create_new_empty_board(client: AsyncClient):
+    # Add a node and a thread to the board
+    n = (await client.post("/api/nodes", json={"title": "Old Clue", "type": "concept"})).json()
+    t = (await client.post("/api/threads", json={"title": "Old Lead", "connected_nodes": [n["id"]]})).json()
+
+    # Board now has evidence
+    before_res = await client.get("/api/board")
+    assert len(before_res.json()["nodes"]) >= 1
+    assert len(before_res.json()["threads"]) >= 1
+
+    # Create new empty board
+    new_board_res = await client.post(
+        "/api/board/new",
+        json={"title": "CASE FILE #702: COLD CASE REOPENED"},
+        headers={"X-User-Name": "Detective Rust"},
+    )
+    assert new_board_res.status_code == 200
+    new_data = new_board_res.json()
+    assert new_data["title"] == "CASE FILE #702: COLD CASE REOPENED"
+    assert new_data["last_edited_by"] == "Detective Rust"
+    assert new_data["nodes"] == []
+    assert new_data["threads"] == []
+
+    # Verify board is now completely empty
+    after_res = await client.get("/api/board")
+    assert after_res.json()["title"] == "CASE FILE #702: COLD CASE REOPENED"
+    assert after_res.json()["nodes"] == []
+    assert after_res.json()["threads"] == []
+
+
 

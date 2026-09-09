@@ -135,9 +135,18 @@ class ThreadResponse(ThreadBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+class BoardUpdate(BaseModel):
+    title: str = Field(..., min_length=1, max_length=255)
+
+class BoardCreateNew(BaseModel):
+    title: Optional[str] = Field("NEW INVESTIGATION CASE", max_length=255)
+
 class BoardStateResponse(BaseModel):
+    title: str = "CASE FILE: THE CRAZY WALL"
+    last_edited_by: Optional[str] = None
     nodes: List[NodeResponse]
     threads: List[ThreadResponse]
+
 
 class ImportNodeItem(BaseModel):
     id: Optional[UUID] = None
@@ -220,6 +229,7 @@ class ImportThreadItem(BaseModel):
         }
 
 class BulkImportPayload(BaseModel):
+    title: Optional[str] = None
     nodes: List[ImportNodeItem] = Field(default_factory=list)
     threads: List[ImportThreadItem] = Field(default_factory=list)
 
@@ -237,6 +247,8 @@ class BulkImportPayload(BaseModel):
         if isinstance(nested, dict):
             data = nested
 
+        title = data.get("title") or data.get("name") or None
+
         raw_nodes = data.get("nodes") or []
         if isinstance(raw_nodes, dict):
             raw_nodes = [{**v, "id": k} if isinstance(v, dict) else {"id": k, "title": str(v)} for k, v in raw_nodes.items()]
@@ -250,9 +262,11 @@ class BulkImportPayload(BaseModel):
             raw_threads = []
 
         return {
+            "title": str(title).strip() if title else None,
             "nodes": raw_nodes,
             "threads": raw_threads,
         }
+
 
 class ImportResponse(BaseModel):
     message: str

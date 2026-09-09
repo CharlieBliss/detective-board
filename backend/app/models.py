@@ -51,3 +51,11 @@ class Thread(Base):
     description = Column(Text, nullable=True)
     last_edited_by = Column(String(255), nullable=True)
 
+class BoardMeta(Base):
+    __tablename__ = "board_meta"
+
+    id = Column(String(50), primary_key=True, default="default")
+    title = Column(String(255), nullable=False, default="CASE FILE: THE CRAZY WALL")
+    last_edited_by = Column(String(255), nullable=True)
+
+

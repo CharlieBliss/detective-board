@@ -18,9 +18,12 @@ export interface BoardThread {
 }
 
 export interface BoardState {
+  title?: string;
+  last_edited_by?: string | null;
   nodes: BoardNode[];
   threads: BoardThread[];
 }
+
 
 export interface EntityNodeData extends Record<string, unknown> {
   id: string;

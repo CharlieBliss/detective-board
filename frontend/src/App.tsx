@@ -17,7 +17,10 @@ import { EditIdentityModal } from './components/EditIdentityModal';
 import { BulkImportModal } from './components/BulkImportModal';
 import { NodeModal } from './components/NodeModal';
 import { ThreadModal } from './components/ThreadModal';
+import { EditBoardNameModal } from './components/EditBoardNameModal';
+import { NewBoardModal } from './components/NewBoardModal';
 import { AudioPlayer } from './components/AudioPlayer';
+
 
 export const App: React.FC = () => {
   // Board Data State
@@ -45,6 +48,9 @@ export const App: React.FC = () => {
   const [nodeToEdit, setNodeToEdit] = useState<BoardNode | null>(null);
   const [isThreadModalOpen, setIsThreadModalOpen] = useState<boolean>(false);
   const [threadToEdit, setThreadToEdit] = useState<BoardThread | null>(null);
+  const [isEditBoardNameOpen, setIsEditBoardNameOpen] = useState<boolean>(false);
+  const [isNewBoardModalOpen, setIsNewBoardModalOpen] = useState<boolean>(false);
+
 
   // Fetch Board from Backend
   const loadBoard = useCallback(async () => {
@@ -206,6 +212,12 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleNewBoardCreated = async () => {
+    setSelected(null);
+    setPositions({});
+    await loadBoard();
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-stone-950 font-sans">
       {/* Top Header & Toolbar */}
@@ -217,9 +229,12 @@ export const App: React.FC = () => {
         onRefresh={loadBoard}
         onLoadSample={handleLoadSample}
         onEditIdentity={() => setIsIdentityModalOpen(true)}
+        onEditBoardName={() => setIsEditBoardNameOpen(true)}
+        onNewBoard={() => setIsNewBoardModalOpen(true)}
         currentUsername={currentUsername}
         loading={loading}
       />
+
 
       {/* Connection Warning Banner */}
       {errorMessage && (
@@ -306,8 +321,24 @@ export const App: React.FC = () => {
         threadToEdit={threadToEdit}
         availableNodes={boardState.nodes}
       />
+
+      <EditBoardNameModal
+        isOpen={isEditBoardNameOpen}
+        onClose={() => setIsEditBoardNameOpen(false)}
+        onSuccess={() => loadBoard()}
+        onRequestIdentity={requireIdentity}
+        currentTitle={boardState.title || 'CASE FILE: THE CRAZY WALL'}
+      />
+
+      <NewBoardModal
+        isOpen={isNewBoardModalOpen}
+        onClose={() => setIsNewBoardModalOpen(false)}
+        onSuccess={handleNewBoardCreated}
+        onRequestIdentity={requireIdentity}
+      />
     </div>
   );
 };
+
 
 export default App;

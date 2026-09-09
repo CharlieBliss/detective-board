@@ -9,7 +9,9 @@ import {
   Sparkles, 
   Shield, 
   RefreshCw,
-  UserCheck
+  UserCheck,
+  Edit2,
+  FolderPlus
 } from 'lucide-react';
 
 interface ToolbarProps {
@@ -20,6 +22,8 @@ interface ToolbarProps {
   onRefresh: () => void;
   onLoadSample: () => void;
   onEditIdentity: () => void;
+  onEditBoardName: () => void;
+  onNewBoard: () => void;
   currentUsername: string | null;
   loading: boolean;
 }
@@ -32,31 +36,39 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onRefresh,
   onLoadSample,
   onEditIdentity,
+  onEditBoardName,
+  onNewBoard,
   currentUsername,
   loading,
 }) => {
   const peopleCount = boardState.nodes.filter((n) => n.type === 'person').length;
   const placeCount = boardState.nodes.filter((n) => n.type === 'place').length;
   const conceptCount = boardState.nodes.filter((n) => n.type === 'concept').length;
+  const boardTitle = boardState.title || 'CASE FILE: THE CRAZY WALL';
 
   return (
-    <header className="absolute top-4 left-4 right-4 z-30 flex items-center justify-between pointer-events-none">
+    <header className="absolute top-4 left-4 right-4 z-30 flex items-center justify-between pointer-events-none gap-4">
       {/* Title / Case File Badge */}
-      <div className="flex items-center gap-3 bg-stone-900/95 border border-stone-700/80 rounded-lg px-4 py-2 shadow-2xl backdrop-blur-md pointer-events-auto">
-        <div className="w-8 h-8 rounded bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+      <div className="flex items-center gap-3 bg-stone-900/95 border border-stone-700/80 rounded-lg px-4 py-2 shadow-2xl backdrop-blur-md pointer-events-auto max-w-lg">
+        <div className="w-8 h-8 rounded bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0">
           <FolderSearch className="w-5 h-5" />
         </div>
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="text-sm font-bold font-mono tracking-wider text-amber-400 uppercase">
-              CASE FILE: THE CRAZY WALL
-            </h1>
-            <span className="text-[9px] font-mono uppercase bg-red-950/80 border border-red-800 text-red-300 px-1.5 py-0.2 rounded">
+            <button
+              onClick={onEditBoardName}
+              className="text-sm font-bold font-mono tracking-wider text-amber-400 uppercase truncate hover:text-amber-300 text-left transition-colors flex items-center gap-1.5 group"
+              title="Click to rename this case board"
+            >
+              <span className="truncate">{boardTitle}</span>
+              <Edit2 className="w-3 h-3 text-stone-500 group-hover:text-amber-400 flex-shrink-0" />
+            </button>
+            <span className="text-[9px] font-mono uppercase bg-red-950/80 border border-red-800 text-red-300 px-1.5 py-0.2 rounded flex-shrink-0">
               CONFIDENTIAL
             </span>
           </div>
-          <div className="flex items-center gap-3 text-[10px] font-mono text-stone-400 mt-0.5">
-            <span>{boardState.nodes.length} Evidence Items ({peopleCount}P / {placeCount}L / {conceptCount}C)</span>
+          <div className="flex items-center gap-3 text-[10px] font-mono text-stone-400 mt-0.5 truncate">
+            <span>{boardState.nodes.length} Evidence ({peopleCount}P / {placeCount}L / {conceptCount}C)</span>
             <span>•</span>
             <span className="text-red-400 font-semibold">{boardState.threads.length} Red Threads</span>
           </div>
@@ -64,7 +76,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-2 pointer-events-auto">
+      <div className="flex items-center gap-2 pointer-events-auto flex-wrap justify-end">
         {boardState.nodes.length === 0 && (
           <button
             onClick={onLoadSample}
@@ -76,6 +88,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <span>Load Sample Case</span>
           </button>
         )}
+
+        <button
+          onClick={onNewBoard}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-stone-900/95 hover:bg-stone-850 text-stone-100 border border-stone-700 text-xs font-mono tracking-wide shadow-xl backdrop-blur-md transition-all hover:border-emerald-500"
+          title="Create a new empty case board"
+        >
+          <FolderPlus className="w-4 h-4 text-emerald-400" />
+          <span>New Board</span>
+        </button>
 
         <button
           onClick={onAddNode}

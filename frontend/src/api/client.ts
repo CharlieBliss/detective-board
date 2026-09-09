@@ -27,6 +27,17 @@ export const api = {
     return res.data;
   },
 
+  updateBoardTitle: async (title: string): Promise<BoardState> => {
+    const res = await apiClient.put<BoardState>('/board', { title });
+    return res.data;
+  },
+
+  createNewBoard: async (title?: string): Promise<BoardState> => {
+    const res = await apiClient.post<BoardState>('/board/new', { title });
+    return res.data;
+  },
+
+
   // Bulk Import
   importBoard: async (data: { nodes: any[]; threads: any[] }) => {
     const res = await apiClient.post('/board/import', data);
