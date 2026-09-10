@@ -17,9 +17,9 @@ The application includes an ambient noir audio player, bulk-import JSON function
                                              │ HTTP / REST (X-User-Name)
                                              ▼
                      ┌────────────────────────────────────────────────┐
-                     │           AWS App Runner (Production)          │
-                     │                 FastAPI + Uvicorn              │
-                     │               SQLAlchemy 2.0 Async             │
+                     │          Amazon ECS Express Mode (Prod)        │
+                     │          Fargate + Auto-ALB + SSL + Logs       │
+                     │          FastAPI + Gunicorn / Uvicorn ASGI     │
                      └───────────────────────┬────────────────────────┘
                                              │ asyncpg
                                              ▼
@@ -33,7 +33,8 @@ The application includes an ambient noir audio player, bulk-import JSON function
 - **Backend**: Python 3.11, FastAPI, SQLAlchemy 2.0 (async), asyncpg, Uvicorn, Gunicorn.
 - **Database**: PostgreSQL 15 (Docker / RDS).
 - **Local Dev**: Docker Compose (containerizing FastAPI hot-reload and Postgres).
-- **Production**: Frontend on Vercel, Backend on AWS App Runner, DB on AWS RDS Postgres.
+- **Production**: Frontend on Vercel, Backend on Amazon ECS Express Mode, DB on AWS RDS Postgres.
+
 
 ---
 
@@ -146,24 +147,37 @@ All mutating endpoints accept the `X-User-Name` header to record the detective i
 
 ## ☁️ Production Deployment
 
+### Backend (Amazon ECS Express Mode)
+- **Container Registry (ECR)**: Build and push the production Docker image to Amazon ECR:
+  ```bash
+  aws ecr create-repository --repository-name detective-board-api
+  docker build -t detective-board-api ./backend
+  docker tag detective-board-api:latest <ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/detective-board-api:latest
+  docker push <ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/detective-board-api:latest
+  ```
+- **Launch in ECS Console**:
+  1. Open the [Amazon ECS Console](https://console.aws.amazon.com/ecs/v2) and choose **Express mode** in the left navigation pane.
+  2. Click **Create** service.
+  3. Enter **Service Name** (e.g. `detective-board-api`).
+  4. Provide the **Image URI** from ECR.
+  5. Port: `8000`. Health check path: `/api/health`.
+  6. Environment Variables:
+     - `DATABASE_URL`: `postgresql+asyncpg://<USER>:<PASS>@<RDS_ENDPOINT>:5432/<DB_NAME>`
+     - `CORS_ORIGINS`: `https://your-frontend.vercel.app`
+     - `ENVIRONMENT`: `production`
+  7. Roles: Select or click **Create new role** for Task Execution and Infrastructure roles.
+  8. Click **Deploy**. Express Mode automatically provisions the Fargate tasks, Application Load Balancer, SSL certificate, and provides a secure HTTPS URL.
+
 ### Frontend (Vercel)
 - Connect GitHub repository to Vercel.
 - Root Directory: `frontend`
 - Build Command: `npm run build`
 - Output Directory: `dist`
 - Environment Variables:
-  - `VITE_API_URL`: URL of your AWS App Runner backend (e.g. `https://xxx.us-east-1.awsapprunner.com/api`).
-
-### Backend (AWS App Runner)
-- Repository contains a production-ready `backend/Dockerfile`.
-- Uses `gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 app.main:app`.
-- Port: `8000`.
-- Health check path: `/api/health` or `/health`.
-- Environment Variables:
-  - `DATABASE_URL`: `postgresql+asyncpg://<USER>:<PASS>@<RDS_HOST>:5432/<DB_NAME>`
-  - `CORS_ORIGINS`: Vercel frontend URL (e.g. `https://your-app.vercel.app`)
-  - `ENVIRONMENT`: `production`
+  - `VITE_API_URL`: The HTTPS URL provided by your ECS Express Mode service (e.g. `https://xxx.ecs.us-east-1.amazonaws.com/api`).
 
 ### Database (AWS RDS PostgreSQL)
 - Engine: PostgreSQL 15+.
-- Tables are initialized automatically upon application startup.
+- Set Security Group inbound rule: Allow PostgreSQL (Port 5432) from the ECS VPC / task security group.
+- Tables (`nodes`, `threads`, `thread_node_links`, `board_meta`) are created automatically on startup.
+
