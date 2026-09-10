@@ -2,14 +2,18 @@ import axios from 'axios';
 import type { BoardNode, BoardState, BoardThread } from '../types/board';
 
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const rawApiUrl = import.meta.env.VITE_API_URL || '/api';
+const cleanBaseUrl = rawApiUrl.startsWith('http')
+  ? (rawApiUrl.replace(/\/+$/, '').endsWith('/api') ? rawApiUrl.replace(/\/+$/, '') : `${rawApiUrl.replace(/\/+$/, '')}/api`)
+  : (rawApiUrl.endsWith('/api') ? rawApiUrl : '/api');
 
 export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: cleanBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
 
 // Attach X-User-Name header from localStorage on all requests
 apiClient.interceptors.request.use((config) => {

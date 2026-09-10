@@ -20,27 +20,36 @@ app = FastAPI(
 )
 
 # CORS setup
-origins = settings.allowed_origins
-# If in development or no specific origins, include dev defaults
+origins = list(settings.allowed_origins)
 if not origins or settings.ENVIRONMENT == "development":
-    origins = [
+    dev_origins = [
         "http://localhost:3000",
         "http://localhost:5173",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
     ]
-    if settings.VERCEL_URL:
-        v_url = settings.VERCEL_URL.strip()
-        origins.append(v_url if v_url.startswith("http") else f"https://{v_url}")
+    for d in dev_origins:
+        if d not in origins:
+            origins.append(d)
+
+if settings.VERCEL_URL:
+    v_url = settings.VERCEL_URL.strip()
+    full_v_url = v_url if v_url.startswith("http") else f"https://{v_url}"
+    if full_v_url not in origins:
+        origins.append(full_v_url)
+
+is_wildcard = "*" in origins
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if origins else ["*"],
-    allow_credentials=True,
+    allow_origins=["*"] if is_wildcard else origins,
+    allow_origin_regex=None if is_wildcard else r"https://.*\.vercel\.app",
+    allow_credentials=not is_wildcard,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
 
 @app.get("/health", tags=["system"])
 @app.get("/api/health", tags=["system"])

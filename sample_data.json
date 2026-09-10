@@ -313,13 +313,6 @@
       "description": "A series of landscape paintings that, viewed through a transparent overlay, reveal Old City entrances, the location of the Sword of Sealing, a regent ascension ritual, a numerical sequence, and a partial clue to a forgotten figure's identity.",
       "image_url": ""
     },
-    {
-      "id": "item_sword",
-      "title": "The Sword of Sealing",
-      "type": "item",
-      "description": "An artifact whose location was revealed within the encoded paintings. Its true purpose remains an open mystery.",
-      "image_url": ""
-    },
 
     {
       "id": "concept_succession_crisis",
@@ -467,17 +460,6 @@
         "location_mages_tower",
         "npc_szimani",
         "npc_eiloron"
-      ]
-    },
-    {
-      "id": "thread_curse_schism",
-      "title": "To Lift or Not to Lift",
-      "description": "Szimani and Eiloron are at odds over whether investigating Scarlet's mother's murder is worth the risk it poses.",
-      "connected_nodes": [
-        "npc_szimani",
-        "npc_eiloron",
-        "concept_curse",
-        "pc_scarlet"
       ]
     },
     {
